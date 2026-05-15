@@ -1,50 +1,64 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const Footer = () => {
   return (
-    <section className='bg-blue-900 p-20'>
-        <div className='flex space-x-17 justify-center'>
-            {/* About */}
-            <div>
-                <h1 className='pb-5 text-2xl text-white'><strong>About the platform</strong></h1>
-                <p className='text-gray-200'>Our platform allows users to easily book health checkup <br /> appointments and choose from different medical packages for <br /> better health monitoring.</p>
-            </div>
+    <footer className="bg-gradient-to-b from-blue-950 to-blue-900 text-white pt-16 pb-8">
 
-            {/* Quick Links */}
-            <div className=''>
-                <h1 className='pb-5 text-2xl text-white'>Quick Links</h1>
-                <div className='text-gray-200'>
-                    <a href="">Home</a><br />
-                    <a href="">Health Packages</a><br />
-                    <a href="">Book Appointment</a><br />
-                    <a href="">My Appointment</a><br /><br />
-                </div>
-            </div>
+      {/* Main Content */}
+      <div className="max-w-6xl mx-auto px-6 grid gap-10 md:grid-cols-4">
 
-            {/* Contact Information */}
-            <div className='text-gray-200'>
-                <h1 className='pb-5 text-2xl text-white'>Contact Info</h1>
-                <p><strong>Phone Number :</strong> +233 55 124 55 47</p>
-                <p><strong>Email :</strong>  morganisaackojo5547@gmail.com</p>
-                <p><strong>Location :</strong>  Accra-Ghana</p>
-            </div>
-
-            {/* Social Media Links */}
-            <div>
-                <h1 className='pb-5 text-xl text-white'>Social Media</h1>
-                <div className='text-gray-200'>
-                    <a href="">Facebook</a><br />
-                    <a href="">Instagram</a><br />
-                    <a href="">Twitter</a><br />
-                    <a href="">LinkedIn</a><br />
-                </div>
-            </div>
+        {/* About */}
+        <div>
+          <h1 className="text-xl font-bold mb-4">About the Platform</h1>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            Our platform allows users to easily book health checkup appointments and choose from different medical packages for better health monitoring.
+          </p>
         </div>
 
-        {/* Copy Right */}
-        <hr className='text-gray-400'/>
-        <h1 className='text-center text-gray-300 pt-10'>© 2026 Health Checkup System. All rights reserved.</h1>
-    </section>
+        {/* Quick Links */}
+        <div>
+          <h1 className="text-xl font-bold mb-4">Quick Links</h1>
+
+          <ul className="space-y-2 text-gray-300 text-sm">
+            <li><Link className="hover:text-white transition" to="/">Home</Link></li>
+            <li><Link className="hover:text-white transition" to="/packages">Health Packages</Link></li>
+            <li><Link className="hover:text-white transition" to="/bookappointment">Book Appointment</Link></li>
+            <li><Link className="hover:text-white transition" to="/myappointment">My Appointments</Link></li>
+          </ul>
+        </div>
+
+        {/* Contact */}
+        <div>
+          <h1 className="text-xl font-bold mb-4">Contact Info</h1>
+
+          <div className="text-gray-300 text-sm space-y-2">
+            <p><span className="font-semibold text-white">Phone:</span> +233 55 124 55 47</p>
+            <p><span className="font-semibold text-white">Email:</span> morganisaackojo5547@gmail.com</p>
+            <p><span className="font-semibold text-white">Location:</span> Accra, Ghana</p>
+          </div>
+        </div>
+
+        {/* Social Media */}
+        <div>
+          <h1 className="text-xl font-bold mb-4">Follow Us</h1>
+
+          <div className="flex flex-col space-y-2 text-gray-300 text-sm">
+            <a className="hover:text-white transition" href="#">Facebook</a>
+            <a className="hover:text-white transition" href="#">Instagram</a>
+            <a className="hover:text-white transition" href="#">Twitter</a>
+            <a className="hover:text-white transition" href="#">LinkedIn</a>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-blue-800 mt-12 pt-6 text-center text-gray-400 text-sm">
+        © 2026 Health Checkup System. All rights reserved.
+      </div>
+
+    </footer>
   )
 }
 

@@ -1,18 +1,79 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
 
 const HeroPage = () => {
   return (
-    <section className="bg-[url('/src/assets/Images/checkup.jpg')] bg-cover object-cover h-130 bg-center pt-20 relative lg:w-full md:w-full w-full lg:pb-20 md:pb-20 pb-20 lg:text-left md:text-left text-center ">
-      <div className="bg-gradient-to-b from-blue-900/60 to to-black/50 inset-0 absolute"></div>
-      <div className='relative lg:w-[1000px] md:w-[1000px] lg:px-6 md:px-20 mx-auto z-10'>
-        <div className='text-white lg:w-[700px] md:w-[700px]'>
-          <h1 className='lg:text-5xl md:text-5xl text-xl font-extrabold font-black tracking-tight leading-tight'>Book Your Health Checkup Easily</h1>
-          <p className='lg:text-lg md:text-lg text-md pt-4 text-gray-200'>Schedule medical checkups quickly and choose from different health packages.</p>
-          <button className='text-white rounded-lg bg-blue-900 p-3 hover:bg-blue-800'>Book Appointment</button>
-        </div>
-      </div>
-    </section>
+    <section className="relative h-[90vh] w-full bg-[url('/src/assets/Images/checkup.jpg')] bg-cover bg-center">
 
+      {/* Dark overlay */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-black/60 to-black/40"></div>
+
+      {/* Content container */}
+      <div className="relative z-10 flex items-center h-full">
+
+        <div className="max-w-6xl mx-auto px-6 w-full">
+
+          <div className="text-white max-w-2xl">
+
+            {/* Badge */}
+            <span className="bg-blue-600/30 border border-blue-300/30 text-sm px-4 py-1 rounded-full">
+              Trusted Healthcare Platform
+            </span>
+
+            {/* Title */}
+            <h1 className="mt-4 text-4xl md:text-6xl font-extrabold leading-tight">
+              Book Your Health Checkup Easily
+            </h1>
+
+            {/* Subtitle */}
+            <p className="mt-4 text-gray-200 text-lg">
+              Schedule medical checkups quickly and choose from different health packages designed for your wellbeing.
+            </p>
+
+            {/* Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-4">
+
+              <Link to="/BookAppointment">
+                <button className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg font-semibold transition">
+                  Book Appointment
+                </button>
+              </Link>
+
+              <Link to="/Packages">
+                <button className="border border-white/40 hover:bg-white hover:text-black px-6 py-3 rounded-lg font-semibold transition">
+                  View Packages
+                </button>
+              </Link>
+
+            </div>
+
+            {/* Small stats */}
+            <div className="mt-10 flex gap-6 text-sm text-gray-300">
+
+              <div>
+                <p className="text-white text-xl font-bold">500+</p>
+                <p>Patients Served</p>
+              </div>
+
+              <div>
+                <p className="text-white text-xl font-bold">20+</p>
+                <p>Health Packages</p>
+              </div>
+
+              <div>
+                <p className="text-white text-xl font-bold">24/7</p>
+                <p>Support</p>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
   )
 }
 

@@ -1,8 +1,15 @@
 import React from 'react'
+import NavBar from '../Components/NavBar'
+import Footer from '../Components/Footer'
+import MyAppoint from '../Components/MyAppoint'
 
 const MyAppointment = () => {
   return (
-    <div>MyAppointment</div>
+    <section>
+      <NavBar />
+      <MyAppoint />
+      {/* <Footer /> */}
+    </section>
   )
 }
 

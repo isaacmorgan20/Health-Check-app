@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { db } from "../Services/Firebase";
 import { getDocs, addDoc, collection, deleteDoc, updateDoc, doc } from "firebase/firestore";
 
-const useUserStore = create((set) = ({
+const useUserStore = create((set) => ({
     users: [],
 
     fetchUser: async () => {

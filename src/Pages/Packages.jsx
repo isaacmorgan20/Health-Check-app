@@ -1,9 +1,14 @@
 import React from 'react'
+import NavBar from '../Components/NavBar'
+import Footer from '../Components/Footer'
+import Package from '../Components/Package'
 
 const Packages = () => {
   return (
     <section>
-      <h1>Packages</h1>
+      <NavBar />
+      <Package />
+      <Footer />
     </section>
   )
 }

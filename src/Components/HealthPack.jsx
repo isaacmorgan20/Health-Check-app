@@ -45,8 +45,7 @@ const HealthPack = () => {
                 {item.type}
               </p>
 
-              <p className="text-green-600 font-bold mt-2 text-lg">
-                {item.price}
+              <p className="text-green-600 font-bold mt-2 text-lg">GHS {item.price}
               </p>
 
               {/* Button */}

@@ -45,8 +45,7 @@ const Package = () => {
                 {item.description}
               </p>
 
-              <p className="text-green-600 font-bold mt-3 text-lg">
-                {item.price}
+              <p className="text-green-600 font-bold mt-3 text-lg">GHS {item.price}
               </p>
 
               <button className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition">

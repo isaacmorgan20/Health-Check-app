@@ -1,60 +1,49 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
-import useAuthStore from '../Context/authStore'
-import logo from '../assets/Images/logo.png'
+import React, { useState } from "react";
+import { Link } from "react-router-dom";
+import useAuthStore from "../Context/authStore";
+import logo from "../assets/Images/logo.png";
+import { Menu, X } from "lucide-react";
 
 const NavBar = () => {
-  const user = useAuthStore((state) => state.user)
+  const user = useAuthStore((state) => state.user);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <nav className="bg-gradient-to-r from-blue-950 to-blue-900 text-white shadow-md sticky top-0 z-50">
 
-      <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
 
-        {/* Logo Section */}
-        <Link
-          to="/"
-          className="flex items-center gap-3"
-        >
+        {/* Logo */}
+        <Link to="/" className="flex items-center gap-2">
 
           <img
             src={logo}
             alt="logo"
-            className="w-12 h-12 object-cover rounded-full bg-white p-1"
+            className="w-10 h-10 object-cover rounded-full bg-white p-1"
           />
 
           <div className="leading-tight">
 
-            <h1 className="text-sm md:text-lg font-bold tracking-wide">
+            <h1 className="text-sm md:text-base font-bold tracking-wide">
               HERBAL HOMEOPATHIC
             </h1>
 
-            <h2 className="text-green-400 text-xs md:text-sm tracking-[3px] font-semibold">
+            <h2 className="text-green-400 text-[10px] md:text-xs tracking-[2px] font-semibold">
               CENTER
             </h2>
-
-            <p className="text-[10px] text-gray-300 hidden md:block">
-              Your Health, Our Priority
-            </p>
 
           </div>
 
         </Link>
 
-        {/* Nav Links */}
-        <div className="hidden lg:flex items-center gap-6 text-sm font-medium">
+        {/* Desktop Links */}
+        <div className="hidden md:flex items-center gap-5 text-sm font-medium">
 
-          <Link
-            to="/"
-            className="hover:text-green-400 transition"
-          >
+          <Link to="/" className="hover:text-green-400 transition">
             Home
           </Link>
 
-          <Link
-            to="/Packages"
-            className="hover:text-green-400 transition"
-          >
+          <Link to="/Packages" className="hover:text-green-400 transition">
             Packages
           </Link>
 
@@ -78,29 +67,74 @@ const NavBar = () => {
         <div className="flex items-center gap-3">
 
           {user ? (
-            <div className="bg-blue-800 px-3 py-1 rounded-xl text-xs shadow">
-              <p className="text-gray-300">
-                Welcome
-              </p>
+            <div className="bg-blue-800 px-3 py-1 rounded-lg text-xs">
+              <p className="text-gray-300">Welcome</p>
 
-              <p className="font-semibold truncate max-w-[120px]">
+              <p className="font-semibold truncate max-w-[100px]">
                 {user.email}
               </p>
             </div>
           ) : (
             <Link to="/login">
-              <button className="bg-green-500 hover:bg-green-600 px-5 py-2 rounded-xl text-sm font-semibold transition shadow">
+              <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
                 Login
               </button>
             </Link>
           )}
 
+          {/* Mobile Menu Button */}
+          <button
+            className="md:hidden"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+
         </div>
 
       </div>
 
-    </nav>
-  )
-}
+      {/* Mobile Menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-blue-950 border-t border-blue-800 px-4 py-4 flex flex-col gap-4 text-sm">
 
-export default NavBar
+          <Link
+            to="/"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            Home
+          </Link>
+
+          <Link
+            to="/Packages"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            Packages
+          </Link>
+
+          <Link
+            to="/BookAppointment"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            Book Appointment
+          </Link>
+
+          <Link
+            to="/myAppointment"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            My Appointment
+          </Link>
+
+        </div>
+      )}
+
+    </nav>
+  );
+};
+
+export default NavBar;

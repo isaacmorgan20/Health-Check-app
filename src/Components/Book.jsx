@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import useUserStore from '../Context/UserStore'
+import { useLocation } from 'react-router-dom'
+import packs from '../Data/pack'
 
 const Book = () => {
   const [name, setName] = useState("")
@@ -10,6 +12,11 @@ const Book = () => {
   const [notes, setNotes] = useState("")
 
   const addNewUser = useUserStore((state) => state.addNewUser)
+
+  const location = useLocation()
+
+  const selectedPackage = location.state?.selectedPackage
+  
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -58,8 +65,10 @@ const Book = () => {
         {/* Selected Package */}
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
           <h2 className="font-semibold text-blue-900">
-            Selected Package:
+            Selected Package
           </h2>
+          <h1 className="mt-2 text-gray-700"><strong>Name</strong>: {selectedPackage?.name} </h1>
+          <p className="text-green-600 font-bold"><strong>Price</strong>: GHC {selectedPackage?.price}</p>
           <p className="text-gray-600 text-sm">
             Please select a package from the Packages page
           </p>
@@ -75,6 +84,7 @@ const Book = () => {
               placeholder="Enter your full name"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              required
               className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
@@ -86,8 +96,39 @@ const Book = () => {
               placeholder="Enter your number"
               value={contact}
               onChange={(e) => setContact(e.target.value)}
+              required
               className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
+          </div>
+
+          <div>
+            <label className="text-sm font-medium text-gray-700">
+              Select Package
+            </label>
+
+            <select
+              className="w-full mt-2 border border-gray-300 p-3 rounded-lg outline-none focus:border-blue-500"
+              defaultValue={selectedPackage?.name || ""}
+            >
+
+              {/* Automatically show selected package first */}
+              {selectedPackage && (
+                <option value={selectedPackage.name}>
+                  {selectedPackage.name}
+                </option>
+              )}
+
+              {/* Other packages */}
+              {packs.map((item) => (
+                <option
+                  key={item.id}
+                  value={item.name}
+                >
+                  {item.name} - GHS {item.price}
+                </option>
+              ))}
+
+            </select>
           </div>
 
           <div>
@@ -109,6 +150,7 @@ const Book = () => {
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
+                required
                 className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -119,6 +161,7 @@ const Book = () => {
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
+                required
                 className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
@@ -131,11 +174,14 @@ const Book = () => {
               placeholder="Any information..."
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
+              required
               className="mt-1 w-full border border-gray-300 rounded-lg p-3 h-28 resize-none focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
           <button
+            onClick={() =>
+              navigate('/myappointment')}
             type="submit"
             className="w-full bg-blue-900 text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold"
           >

@@ -1,22 +1,28 @@
 import React, { useState } from 'react'
 import useUserStore from '../Context/UserStore'
-import { useLocation } from 'react-router-dom'
+import {
+  Navigate, useLocation, //useNavigate 
+
+} from 'react-router-dom'
 import packs from '../Data/pack'
 
 const Book = () => {
+  // const navigate = useNavigate()
+  const location = useLocation()
+  const selectedPackage = location.state?.selectedPackage
+  const addNewUser = useUserStore((state) => state.addNewUser)
+
   const [name, setName] = useState("")
   const [contact, setContact] = useState("")
   const [email, setEmail] = useState("")
   const [date, setDate] = useState("")
   const [time, setTime] = useState("")
   const [notes, setNotes] = useState("")
+  const [selected, setSelected] = useState(selectedPackage?.name)
 
-  const addNewUser = useUserStore((state) => state.addNewUser)
 
-  const location = useLocation()
 
-  const selectedPackage = location.state?.selectedPackage
-  
+
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -64,14 +70,31 @@ const Book = () => {
 
         {/* Selected Package */}
         <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <h2 className="font-semibold text-blue-900">
+
+          <h2 className="font-semibold text-blue-900 text-lg">
             Selected Package
           </h2>
-          <h1 className="mt-2 text-gray-700"><strong>Name</strong>: {selectedPackage?.name} </h1>
-          <p className="text-green-600 font-bold"><strong>Price</strong>: GHC {selectedPackage?.price}</p>
-          <p className="text-gray-600 text-sm">
-            Please select a package from the Packages page
-          </p>
+
+          {selectedPackage ? (
+            <>
+
+              <h1 className="mt-3 text-gray-700">
+                <strong>Name:</strong> {selectedPackage.name}
+              </h1>
+
+              <p className="text-green-600 font-bold mt-1">
+                <strong>Price:</strong> GHC {selectedPackage.price}
+              </p>
+
+            </>
+          ) : (
+
+            <p className="text-gray-600 text-sm mt-2">
+              Please select a package from the Packages page.
+            </p>
+
+          )}
+
         </div>
 
         {/* Form */}
@@ -108,7 +131,9 @@ const Book = () => {
 
             <select
               className="w-full mt-2 border border-gray-300 p-3 rounded-lg outline-none focus:border-blue-500"
-              defaultValue={selectedPackage?.name || ""}
+              // defaultValue={selectedPackage?.name || ""}
+              value={selected}
+              onChange={(e) => setSelected(e.target.value)}
             >
 
               {/* Automatically show selected package first */}
@@ -180,9 +205,16 @@ const Book = () => {
           </div>
 
           <button
-            onClick={() =>
-              navigate('/myappointment')}
             type="submit"
+            // onClick={(e) => {
+            //   e.preventDefault()
+
+            //   Navigate('/Myappointment', {
+            //     state: {
+            //       package: selectedPackage
+            //     }
+            //   })
+            // }}
             className="w-full bg-blue-900 text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold"
           >
             Book Appointment

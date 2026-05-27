@@ -1,7 +1,10 @@
 import React from 'react'
 import packages from '../Data/health'
+import { useNavigate } from 'react-router-dom'
 
 const HealthPack = () => {
+  const navigate = useNavigate()
+
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white py-20 px-6">
 
@@ -38,18 +41,25 @@ const HealthPack = () => {
             <div className="p-5">
 
               <h1 className="font-bold text-xl text-blue-900">
-                {item.title}
+                {item.name}
               </h1>
 
               <p className="text-gray-600 text-sm mt-1">
                 {item.type}
               </p>
 
-              <p className="text-green-600 font-bold mt-2 text-lg">GHS {item.price}
+              <p className="text-green-600 font-bold mt-2 text-lg">
+                GHS {item.price}
               </p>
 
               {/* Button */}
-              <button className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition">
+              <button
+                onClick={() =>
+                  navigate('/bookappointment', {
+                    state: { selectedPackage: item }
+                  })
+                }
+                className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition">
                 Book Now
               </button>
 

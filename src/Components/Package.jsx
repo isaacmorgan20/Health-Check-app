@@ -1,7 +1,11 @@
 import React from 'react'
 import packs from '../Data/pack'
+import { useNavigate } from 'react-router-dom'
 
 const Package = () => {
+
+  const navigate = useNavigate()
+
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white py-20 px-6">
 
@@ -45,10 +49,18 @@ const Package = () => {
                 {item.description}
               </p>
 
-              <p className="text-green-600 font-bold mt-3 text-lg">GHS {item.price}
+              <p className="text-green-600 font-bold mt-3 text-lg">
+                GHS {item.price}
               </p>
 
-              <button className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition">
+              <button
+                onClick={() =>
+                  navigate('/bookappointment', {
+                    state: { selectedPackage: item }
+                  })
+                }
+                className="mt-4 w-full bg-blue-900 text-white py-2 rounded-lg hover:bg-blue-800 transition"
+              >
                 Book Now
               </button>
 

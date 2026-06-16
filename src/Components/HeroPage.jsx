@@ -1,7 +1,11 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
+import { Sparkles } from 'lucide-react'
+import useChatStore from '../Context/chatStore'
 
 const HeroPage = () => {
+  const setIsOpen = useChatStore((state) => state.setIsOpen)
+
   return (
     <section className="relative h-[90vh] w-full bg-[url('/src/assets/Images/checkup.jpg')] bg-cover bg-center">
 
@@ -44,6 +48,14 @@ const HeroPage = () => {
                   View Packages
                 </button>
               </Link>
+
+              <button
+                onClick={() => setIsOpen(true)}
+                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Sparkles className="w-4 h-4" />
+                Ask AI Assistant
+              </button>
 
             </div>
 

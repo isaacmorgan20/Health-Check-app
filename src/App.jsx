@@ -84,6 +84,7 @@ import MyAppointment from './Pages/MyAppointment'
 import Login from './Pages/Login'
 import Register from './Pages/Register'
 import Home from './Pages/Home'
+import Chatbot from './Components/Chatbot'
 
 import useAuthStore from './Context/authStore'
 
@@ -123,6 +124,7 @@ const App = () => {
         {user && <Route path="*" element={<Navigate to="/" />} />}
 
       </Routes>
+      {user && <Chatbot />}
     </BrowserRouter>
   )
 }

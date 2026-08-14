@@ -27,6 +27,11 @@ const Admin = () => {
   const [showAddForm, setShowAddForm] = useState(false);
   const [messageTarget, setMessageTarget] = useState(null);
   const [adminMessage, setAdminMessage] = useState("");
+  const [recordTarget, setRecordTarget] = useState(null);
+  const [recordSearch, setRecordSearch] = useState("");
+  const [newRecord, setNewRecord] = useState({ type: "Visit note", title: "", details: "" });
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentNote, setPaymentNote] = useState("");
 
   useEffect(() => {
     const unsubUsers = listenToUsers();
@@ -166,6 +171,62 @@ const Admin = () => {
     }
   };
 
+  const recordTypes = ["Visit note", "Diagnosis", "Test result", "Prescription", "Vital signs"];
+
+  const stamp = () => Date.now();
+
+  const liveRecordTarget =
+    appointments.find((a) => a.id === recordTarget?.id) || recordTarget;
+
+  const totalPaid = (appt) =>
+    (appt.paymentRecords || []).reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+  const balance = (appt) =>
+    Math.max(0, Number(appt.price || 0) - totalPaid(appt));
+
+  const addRecord = async () => {
+    if (!newRecord.details.trim() || !liveRecordTarget) return;
+    await updateUser(liveRecordTarget.id, {
+      records: [
+        ...(liveRecordTarget.records || []),
+        {
+          type: newRecord.type,
+          title: newRecord.title.trim(),
+          details: newRecord.details.trim(),
+          at: stamp(),
+        },
+      ],
+    });
+    setNewRecord({ type: "Visit note", title: "", details: "" });
+  };
+
+  const logPayment = async () => {
+    const amount = Number(paymentAmount);
+    if (!amount || !liveRecordTarget) return;
+    const records = [
+      ...(liveRecordTarget.paymentRecords || []),
+      { amount, note: paymentNote.trim(), at: stamp(), method: "cash" },
+    ];
+    const paid = records.reduce((s, p) => s + Number(p.amount || 0), 0);
+    const settled = paid >= Number(liveRecordTarget.price || 0);
+    await updateUser(liveRecordTarget.id, {
+      paymentRecords: records,
+      ...(settled ? { paymentStatus: "paid" } : {}),
+    });
+    setPaymentAmount("");
+    setPaymentNote("");
+  };
+
+  const filteredRecords = appointments.filter((a) => {
+    if (!recordSearch) return true;
+    const q = recordSearch.toLowerCase();
+    return (
+      (a.name || "").toLowerCase().includes(q) ||
+      (a.email || "").toLowerCase().includes(q) ||
+      (a.package || "").toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       {/* Sidebar */}
@@ -206,6 +267,13 @@ const Admin = () => {
             onClick={() => setActiveTab("messages")}
           >
             Messages
+          </li>
+
+          <li
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "records" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            onClick={() => setActiveTab("records")}
+          >
+            Records
           </li>
         </ul>
       </div>
@@ -586,6 +654,208 @@ const Admin = () => {
                 ))}
               </div>
             )}
+          </div>
+        )}
+
+        {/* Records */}
+        {activeTab === "records" && (
+          <div>
+            <div className="flex flex-wrap items-center gap-3 mb-4">
+              <h2 className="text-2xl font-bold">Records</h2>
+              <input
+                type="text"
+                placeholder="Search patient, email or package..."
+                value={recordSearch}
+                onChange={(e) => setRecordSearch(e.target.value)}
+                className="ml-auto border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none w-full md:w-64"
+              />
+            </div>
+
+            {filteredRecords.length === 0 ? (
+              <p className="text-gray-500 bg-white p-6 rounded shadow">
+                No appointments found.
+              </p>
+            ) : (
+              <div className="bg-white shadow rounded overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="bg-gray-50 text-gray-500">
+                    <tr>
+                      <th className="text-left p-3">Patient</th>
+                      <th className="text-left p-3">Package</th>
+                      <th className="text-left p-3">Date</th>
+                      <th className="text-left p-3">Payment</th>
+                      <th className="text-left p-3">Records</th>
+                      <th className="text-left p-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredRecords.map((a) => {
+                      const bal = balance(a);
+                      return (
+                        <tr key={a.id} className="border-t border-gray-100">
+                          <td className="p-3">
+                            <span className="font-semibold text-blue-900">{a.name}</span>
+                            <span className="block text-xs text-gray-400">{a.email}</span>
+                          </td>
+                          <td className="p-3">{a.package || "—"}</td>
+                          <td className="p-3">{a.date || "—"}</td>
+                          <td className="p-3">
+                            <span className="font-medium">GHS {Number(a.price || 0)}</span>
+                            <span className="block text-xs text-gray-400">
+                              {bal > 0 ? `Balance GHS ${bal}` : "Paid in full"}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">
+                              {(a.records || []).length} record{(a.records || []).length === 1 ? "" : "s"}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right">
+                            <button
+                              onClick={() => setRecordTarget(a)}
+                              className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
+                            >
+                              View / Add
+                            </button>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Record Modal */}
+        {recordTarget && liveRecordTarget && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-lg">Records — {liveRecordTarget.name}</h3>
+                  <p className="text-sm text-gray-500">
+                    {liveRecordTarget.package || "Appointment"} · {liveRecordTarget.date || "Date TBD"} ·{" "}
+                    <span className="font-medium">GHS {Number(liveRecordTarget.price || 0)}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={() => setRecordTarget(null)}
+                  className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+
+              {/* Payment status */}
+              <div className="bg-gray-50 border border-gray-100 rounded-lg p-4 flex flex-wrap items-center gap-4">
+                <div>
+                  <p className="text-xs text-gray-400">Paid</p>
+                  <p className="font-bold text-green-600">GHS {totalPaid(liveRecordTarget)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-400">Balance</p>
+                  <p className="font-bold text-red-500">GHS {balance(liveRecordTarget)}</p>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  <input
+                    type="number"
+                    placeholder="Amount"
+                    value={paymentAmount}
+                    onChange={(e) => setPaymentAmount(e.target.value)}
+                    className="w-24 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Note (optional)"
+                    value={paymentNote}
+                    onChange={(e) => setPaymentNote(e.target.value)}
+                    className="flex-1 min-w-24 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    onClick={logPayment}
+                    className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    Log payment
+                  </button>
+                </div>
+              </div>
+
+              {/* Payment history */}
+              {(liveRecordTarget.paymentRecords || []).length > 0 && (
+                <div className="border border-gray-100 rounded-lg p-4">
+                  <h4 className="font-semibold mb-2 text-sm text-blue-900">Payment history</h4>
+                  <ul className="space-y-1">
+                    {(liveRecordTarget.paymentRecords || []).map((p, i) => (
+                      <li key={i} className="text-sm flex justify-between">
+                        <span>
+                          GHS {p.amount}{" "}
+                          <span className="text-gray-400">· {p.note || "cash"} · {new Date(p.at).toLocaleString()}</span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Add record */}
+              <div className="border border-gray-100 rounded-lg p-4 space-y-2">
+                <h4 className="font-semibold text-sm text-blue-900">Add record</h4>
+                <div className="flex flex-wrap gap-2">
+                  <select
+                    value={newRecord.type}
+                    onChange={(e) => setNewRecord({ ...newRecord, type: e.target.value })}
+                    className="border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    {recordTypes.map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    placeholder="Title (e.g. Blood pressure)"
+                    value={newRecord.title}
+                    onChange={(e) => setNewRecord({ ...newRecord, title: e.target.value })}
+                    className="flex-1 min-w-32 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+                <textarea
+                  placeholder="Details / notes..."
+                  value={newRecord.details}
+                  onChange={(e) => setNewRecord({ ...newRecord, details: e.target.value })}
+                  rows={2}
+                  className="w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <button
+                  onClick={addRecord}
+                  className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                >
+                  Save record
+                </button>
+              </div>
+
+              {/* Records list */}
+              <div className="border border-gray-100 rounded-lg p-4">
+                <h4 className="font-semibold mb-2 text-sm text-blue-900">All records</h4>
+                {(liveRecordTarget.records || []).length === 0 ? (
+                  <p className="text-sm text-gray-400">No records yet.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {(liveRecordTarget.records || []).slice().reverse().map((r, i) => (
+                      <li key={i} className="text-sm bg-gray-50 rounded-lg p-3">
+                        <span className="inline-block text-[10px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold mr-2 uppercase">
+                          {r.type}
+                        </span>
+                        <span className="font-semibold">{r.title}</span>
+                        <span className="text-gray-400 text-xs"> · {new Date(r.at).toLocaleString()}</span>
+                        {r.details && <p className="text-gray-600 mt-1">{r.details}</p>}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
           </div>
         )}
 

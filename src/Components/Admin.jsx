@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import useUserStore from "../Context/UserStore";
 import usePackageStore from "../Context/packageStore";
+import useClinicStore from "../Context/clinicStore";
 import { notifyClient } from "../Utils/notify";
 
 const Admin = () => {
@@ -32,6 +33,10 @@ const Admin = () => {
   const [newRecord, setNewRecord] = useState({ type: "Visit note", title: "", details: "" });
   const [paymentAmount, setPaymentAmount] = useState("");
   const [paymentNote, setPaymentNote] = useState("");
+
+  const clinicSettings = useClinicStore((state) => state.settings);
+  const saveSettings = useClinicStore((state) => state.saveSettings);
+  const [settingsForm, setSettingsForm] = useState(null);
 
   useEffect(() => {
     const unsubUsers = listenToUsers();
@@ -227,6 +232,39 @@ const Admin = () => {
     );
   });
 
+  const openSettingsTab = () => {
+    setActiveTab("settings");
+    setSettingsForm(clinicSettings);
+  };
+
+  const updateHour = (index, field, value) => {
+    setSettingsForm((f) => {
+      const hours = [...(f?.hours || [])];
+      hours[index] = { ...hours[index], [field]: value };
+      return { ...f, hours };
+    });
+  };
+
+  const addHourRow = () => {
+    setSettingsForm((f) => ({
+      ...f,
+      hours: [...(f?.hours || []), { day: "", time: "" }],
+    }));
+  };
+
+  const removeHourRow = (index) => {
+    setSettingsForm((f) => ({
+      ...f,
+      hours: (f?.hours || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const saveClinicSettings = async () => {
+    if (!settingsForm) return;
+    await saveSettings(settingsForm);
+    alert("Clinic settings saved.");
+  };
+
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       {/* Sidebar */}
@@ -274,6 +312,13 @@ const Admin = () => {
             onClick={() => setActiveTab("records")}
           >
             Records
+          </li>
+
+          <li
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "settings" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            onClick={openSettingsTab}
+          >
+            Settings
           </li>
         </ul>
       </div>
@@ -725,6 +770,108 @@ const Admin = () => {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Settings */}
+        {activeTab === "settings" && settingsForm && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Clinic Settings</h2>
+            <div className="bg-white shadow rounded-2xl p-6 max-w-2xl space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-600">Clinic name</span>
+                  <input
+                    type="text"
+                    value={settingsForm.name || ""}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, name: e.target.value })}
+                    className="mt-1 w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </label>
+                <label className="block">
+                  <span className="text-sm font-medium text-gray-600">Phone</span>
+                  <input
+                    type="text"
+                    value={settingsForm.phone || ""}
+                    onChange={(e) => setSettingsForm({ ...settingsForm, phone: e.target.value })}
+                    className="mt-1 w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </label>
+              </div>
+
+              <label className="block">
+                <span className="text-sm font-medium text-gray-600">Location</span>
+                <input
+                  type="text"
+                  value={settingsForm.location || ""}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, location: e.target.value })}
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-gray-600">Email</span>
+                <input
+                  type="text"
+                  value={settingsForm.email || ""}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, email: e.target.value })}
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-gray-600">About</span>
+                <textarea
+                  rows={2}
+                  value={settingsForm.about || ""}
+                  onChange={(e) => setSettingsForm({ ...settingsForm, about: e.target.value })}
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+              </label>
+
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600">Opening hours</span>
+                  <button
+                    onClick={addHourRow}
+                    className="text-sm text-blue-700 font-semibold hover:underline"
+                  >
+                    + Add row
+                  </button>
+                </div>
+                {(settingsForm.hours || []).map((h, i) => (
+                  <div key={i} className="flex gap-2 mb-2 items-center">
+                    <input
+                      type="text"
+                      placeholder="Days"
+                      value={h.day || ""}
+                      onChange={(e) => updateHour(i, "day", e.target.value)}
+                      className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Time"
+                      value={h.time || ""}
+                      onChange={(e) => updateHour(i, "time", e.target.value)}
+                      className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                    />
+                    <button
+                      onClick={() => removeHourRow(i)}
+                      className="text-red-500 hover:text-red-700 text-lg leading-none"
+                    >
+                      &times;
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={saveClinicSettings}
+                className="bg-blue-900 hover:bg-blue-800 text-white px-6 py-2.5 rounded-lg font-semibold transition"
+              >
+                Save settings
+              </button>
+            </div>
           </div>
         )}
 

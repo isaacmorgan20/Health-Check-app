@@ -1,12 +1,18 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { MapPin, Phone, Clock } from 'lucide-react'
+import useClinicStore from '../Context/clinicStore'
 
 const ClinicInfo = () => {
-  const hours = [
-    { day: "Monday - Friday", time: "8:00 AM - 5:00 PM" },
-    { day: "Saturday", time: "9:00 AM - 1:00 PM" },
-    { day: "Sunday", time: "Closed" },
-  ]
+  const settings = useClinicStore((state) => state.settings)
+  const listenToSettings = useClinicStore((state) => state.listenToSettings)
+
+  useEffect(() => {
+    const unsubscribe = listenToSettings()
+    return () => unsubscribe && unsubscribe()
+  }, [listenToSettings])
+
+  const hours = settings.hours || []
+  const contactLines = [settings.phone, settings.email].filter(Boolean)
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white py-20 px-6">
@@ -29,7 +35,7 @@ const ClinicInfo = () => {
             </div>
             <h2 className="text-lg font-bold text-blue-900">Location</h2>
             <p className="text-gray-600 mt-2 text-sm leading-relaxed">
-              12 Independence Avenue, Accra, Ghana
+              {settings.location || "—"}
             </p>
           </div>
 
@@ -40,9 +46,16 @@ const ClinicInfo = () => {
             </div>
             <h2 className="text-lg font-bold text-blue-900">Contact</h2>
             <p className="text-gray-600 mt-2 text-sm leading-relaxed">
-              +233 20 123 4567
-              <br />
-              care@herbalhomeopathic.app
+              {contactLines.length ? (
+                contactLines.map((line, i) => (
+                  <span key={i}>
+                    {line}
+                    {i < contactLines.length - 1 && <br />}
+                  </span>
+                ))
+              ) : (
+                "—"
+              )}
             </p>
           </div>
 
@@ -53,12 +66,16 @@ const ClinicInfo = () => {
             </div>
             <h2 className="text-lg font-bold text-blue-900">Opening Hours</h2>
             <div className="mt-3 space-y-2 text-sm text-gray-600">
-              {hours.map((h) => (
-                <div key={h.day} className="flex justify-between border-b border-gray-100 pb-2">
-                  <span>{h.day}</span>
-                  <span className="font-semibold text-blue-800">{h.time}</span>
-                </div>
-              ))}
+              {hours.length ? (
+                hours.map((h, i) => (
+                  <div key={i} className="flex justify-between border-b border-gray-100 pb-2">
+                    <span>{h.day}</span>
+                    <span className="font-semibold text-blue-800">{h.time}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-gray-400">Hours not set yet.</p>
+              )}
             </div>
           </div>
         </div>

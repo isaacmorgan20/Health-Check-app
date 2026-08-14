@@ -69,6 +69,14 @@ service cloud.firestore {
     }
 
     // ------------------------------------------------------------
+    // clinic collection (public info, editable only by admins)
+    // ------------------------------------------------------------
+    match /clinic/{docId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // ------------------------------------------------------------
     // Explicit deny for anything else
     // ------------------------------------------------------------
     match /{document=**} {

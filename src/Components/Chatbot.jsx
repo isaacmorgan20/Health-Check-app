@@ -1,9 +1,15 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle } from "lucide-react";
 import useChatStore from "../Context/chatStore";
+import useAgentStore from "../Context/agentStore";
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
 const Chatbot = () => {
   const { isOpen, setIsOpen, toggleChat } = useChatStore();
+  const setBookingDraft = useAgentStore((state) => state.setBookingDraft);
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -29,6 +35,36 @@ const Chatbot = () => {
     }
   }, [messages, isLoading, isOpen]);
 
+  // Execute agent actions returned by the backend
+  const dispatchActions = (actions) => {
+    actions.forEach((action) => {
+      if (!action || !action.type) return;
+
+      switch (action.type) {
+        case "navigate":
+          navigate(action.to);
+          break;
+
+        case "open_booking":
+          setBookingDraft(
+            { packageId: action.packageId, ...(action.prefill || {}) },
+            action.autoSubmit === true
+          );
+          navigate("/BookAppointment");
+          break;
+
+        case "scroll_to":
+          document
+            .querySelector(action.selector)
+            ?.scrollIntoView({ behavior: "smooth", block: "center" });
+          break;
+
+        default:
+          break;
+      }
+    });
+  };
+
   const handleSendMessage = async (textToSend) => {
     const text = textToSend || input.trim();
     if (!text) return;
@@ -45,7 +81,7 @@ const Chatbot = () => {
     try {
       // Map frontend messages format to API expected format:
       // {"messages": [{"role": "user", "content": "..."}, ...]}
-      const response = await fetch("http://127.0.0.1:8000/chat", {
+      const response = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -71,6 +107,7 @@ const Chatbot = () => {
         ...prev,
         { role: "assistant", content: data.response },
       ]);
+      dispatchActions(data.actions || []);
     } catch (err) {
       console.error("Chat error:", err);
       setMessages((prev) => [

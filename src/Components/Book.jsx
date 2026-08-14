@@ -1,5 +1,6 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import useUserStore from '../Context/UserStore'
+import useAgentStore from '../Context/agentStore'
 import {
   Navigate, useLocation, //useNavigate 
 
@@ -12,31 +13,28 @@ const Book = () => {
   const selectedPackage = location.state?.selectedPackage
   const addNewUser = useUserStore((state) => state.addNewUser)
 
-  const [name, setName] = useState("")
-  const [contact, setContact] = useState("")
-  const [email, setEmail] = useState("")
-  const [date, setDate] = useState("")
-  const [time, setTime] = useState("")
-  const [notes, setNotes] = useState("")
-  const [selected, setSelected] = useState(selectedPackage?.name)
+  const bookingDraft = useAgentStore((state) => state.bookingDraft)
+  const autoSubmit = useAgentStore((state) => state.autoSubmit)
+  const clearBookingDraft = useAgentStore((state) => state.clearBookingDraft)
 
+  const agentPackage = bookingDraft?.packageId
+    ? packs.find((p) => p.id === Number(bookingDraft.packageId))
+    : null
 
+  const initialPackage = agentPackage || selectedPackage
 
+  const [name, setName] = useState(bookingDraft?.name || "")
+  const [contact, setContact] = useState(bookingDraft?.contact || "")
+  const [email, setEmail] = useState(bookingDraft?.email || "")
+  const [date, setDate] = useState(bookingDraft?.date || "")
+  const [time, setTime] = useState(bookingDraft?.time || "")
+  const [notes, setNotes] = useState(bookingDraft?.notes || "")
+  const [selected, setSelected] = useState(initialPackage?.name)
 
+  const submittedRef = useRef(false)
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-
-    const newUser = {
-      name,
-      contact,
-      email,
-      date,
-      time,
-      notes,
-    }
-
-    addNewUser(newUser)
+  const saveAppointment = useCallback((user) => {
+    addNewUser(user)
 
     setName("")
     setContact("")
@@ -44,7 +42,35 @@ const Book = () => {
     setDate("")
     setTime("")
     setNotes("")
+  }, [addNewUser])
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+
+    saveAppointment({ name, contact, email, date, time, notes })
   }
+
+  // Auto-submit when the AI agent has all the required details
+  useEffect(() => {
+    if (!autoSubmit || submittedRef.current) return
+    if (!name || !contact || !date || !time) return
+
+    submittedRef.current = true
+
+    const timer = setTimeout(() => {
+      saveAppointment({
+        name,
+        contact,
+        email,
+        date,
+        time,
+        notes: notes || "Booked via HealthAssist AI",
+      })
+      clearBookingDraft()
+    }, 0)
+
+    return () => clearTimeout(timer)
+  }, [autoSubmit, name, contact, email, date, time, notes, clearBookingDraft, saveAppointment])
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">
@@ -75,15 +101,15 @@ const Book = () => {
             Selected Package
           </h2>
 
-          {selectedPackage ? (
+          {initialPackage ? (
             <>
 
               <h1 className="mt-3 text-gray-700">
-                <strong>Name:</strong> {selectedPackage.name}
+                <strong>Name:</strong> {initialPackage.name}
               </h1>
 
               <p className="text-green-600 font-bold mt-1">
-                <strong>Price:</strong> GHC {selectedPackage.price}
+                <strong>Price:</strong> GHC {initialPackage.price}
               </p>
 
             </>
@@ -137,9 +163,9 @@ const Book = () => {
             >
 
               {/* Automatically show selected package first */}
-              {selectedPackage && (
-                <option value={selectedPackage.name}>
-                  {selectedPackage.name}
+              {initialPackage && (
+                <option value={initialPackage.name}>
+                  {initialPackage.name}
                 </option>
               )}
 

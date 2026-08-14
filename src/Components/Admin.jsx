@@ -331,7 +331,12 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold mb-6">Dashboard Overview</h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="bg-white p-4 rounded shadow">
+                <h3 className="text-lg font-semibold">Registered Users</h3>
+                <p className="text-2xl text-blue-800">{profiles.length}</p>
+              </div>
+
               <div className="bg-white p-4 rounded shadow">
                 <h3 className="text-lg font-semibold">Total Appointments</h3>
                 <p className="text-2xl">{total}</p>
@@ -347,7 +352,7 @@ const Admin = () => {
                 <p className="text-2xl">{paid}</p>
               </div>
 
-              <div className="bg-white p-4 rounded shadow col-span-full sm:col-span-3">
+              <div className="bg-white p-4 rounded shadow col-span-full">
                 <h3 className="text-lg font-semibold">Revenue (paid + clinic)</h3>
                 <p className="text-2xl text-green-600">GHC {revenue}</p>
               </div>

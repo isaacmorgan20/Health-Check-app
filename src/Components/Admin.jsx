@@ -1,32 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useUserStore from "../Context/UserStore";
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const appointments = useUserStore((state) => state.users);
+  const fetchAppointments = useUserStore((state) => state.fetchAppointments);
+  const updateUser = useUserStore((state) => state.updateUser);
+  const deleteUser = useUserStore((state) => state.deleteUser);
 
-  const appointments = [
-    {
-      id: 1,
-      name: "Isaac Morgan",
-      package: "Full Body Check",
-      date: "2026-05-20",
-      time: "10:00 AM",
-      status: "Pending"
-    },
-    {
-      id: 2,
-      name: "Ama Serwaa",
-      package: "Basic Health Check",
-      date: "2026-05-21",
-      time: "09:00 AM",
-      status: "Completed"
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  const total = appointments.length;
+  const pending = appointments.filter(
+    (a) => a.status === "Pending" || a.paymentStatus === "unpaid"
+  ).length;
+  const paid = appointments.filter(
+    (a) => a.paymentStatus === "paid"
+  ).length;
+  const revenue = appointments
+    .filter((a) => a.paymentStatus === "paid" || a.paymentStatus === "clinic")
+    .reduce((sum, a) => sum + Number(a.price || 0), 0);
+
+  const changeStatus = async (appointment, status) => {
+    await updateUser(appointment.id, { status });
+  };
+
+  const handleDelete = async (appointment) => {
+    if (window.confirm(`Delete appointment for ${appointment.name}?`)) {
+      await deleteUser(appointment.id);
     }
-  ];
+  };
 
-  const packages = [
-    { id: 1, name: "Basic Health Check", price: "GHS 150" },
-    { id: 2, name: "Full Body Check", price: "GHS 400" },
-    { id: 3, name: "Heart Check", price: "GHS 250" }
-  ];
+  const statusColor = (status) => {
+    switch (status) {
+      case "Completed": return "bg-green-600";
+      case "Cancelled": return "bg-red-600";
+      case "Pending": return "bg-yellow-500";
+      default: return "bg-blue-600";
+    }
+  };
 
   return (
     <div className="flex flex-col md:flex-row h-screen bg-gray-100">
@@ -36,24 +50,17 @@ const Admin = () => {
 
         <ul className="flex md:flex-col gap-3 md:space-y-3 overflow-x-auto pb-2 md:pb-0">
           <li
-            className={`p-2 rounded cursor-pointer ${activeTab === "dashboard" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "dashboard" ? "bg-blue-700" : "hover:bg-blue-800"}`}
             onClick={() => setActiveTab("dashboard")}
           >
             Dashboard
           </li>
 
           <li
-            className={`p-2 rounded cursor-pointer ${activeTab === "appointments" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "appointments" ? "bg-blue-700" : "hover:bg-blue-800"}`}
             onClick={() => setActiveTab("appointments")}
           >
             Appointments
-          </li>
-
-          <li
-            className={`p-2 rounded cursor-pointer ${activeTab === "packages" ? "bg-blue-700" : "hover:bg-blue-800"}`}
-            onClick={() => setActiveTab("packages")}
-          >
-            Packages
           </li>
         </ul>
       </div>
@@ -69,19 +76,22 @@ const Admin = () => {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white p-4 rounded shadow">
                 <h3 className="text-lg font-semibold">Total Appointments</h3>
-                <p className="text-2xl">{appointments.length}</p>
+                <p className="text-2xl">{total}</p>
               </div>
 
               <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold">Total Packages</h3>
-                <p className="text-2xl">{packages.length}</p>
+                <h3 className="text-lg font-semibold">Pending / Unpaid</h3>
+                <p className="text-2xl">{pending}</p>
               </div>
 
               <div className="bg-white p-4 rounded shadow">
-                <h3 className="text-lg font-semibold">Pending</h3>
-                <p className="text-2xl">
-                  {appointments.filter(a => a.status === "Pending").length}
-                </p>
+                <h3 className="text-lg font-semibold">Paid</h3>
+                <p className="text-2xl">{paid}</p>
+              </div>
+
+              <div className="bg-white p-4 rounded shadow col-span-full sm:col-span-3">
+                <h3 className="text-lg font-semibold">Revenue (paid + clinic)</h3>
+                <p className="text-2xl text-green-600">GHC {revenue}</p>
               </div>
             </div>
           </div>
@@ -92,50 +102,64 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold mb-4">Appointments</h2>
 
-            <div className="overflow-x-auto">
-              <table className="w-full bg-white shadow rounded overflow-hidden">
-              <thead className="bg-gray-200">
-                <tr>
-                  <th className="p-3 text-left">Name</th>
-                  <th className="p-3 text-left">Package</th>
-                  <th className="p-3 text-left">Date</th>
-                  <th className="p-3 text-left">Time</th>
-                  <th className="p-3 text-left">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((a) => (
-                  <tr key={a.id} className="border-t">
-                    <td className="p-3">{a.name}</td>
-                    <td className="p-3">{a.package}</td>
-                    <td className="p-3">{a.date}</td>
-                    <td className="p-3">{a.time}</td>
-                    <td className="p-3">
-                      <span className={`px-2 py-1 rounded text-white text-sm ${a.status === "Pending" ? "bg-yellow-500" : "bg-green-600"}`}>
-                        {a.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            </div>
-          </div>
-        )}
-
-        {/* Packages */}
-        {activeTab === "packages" && (
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Packages</h2>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {packages.map((p) => (
-                <div key={p.id} className="bg-white p-4 rounded shadow">
-                  <h3 className="text-lg font-semibold">{p.name}</h3>
-                  <p className="text-gray-600">{p.price}</p>
-                </div>
-              ))}
-            </div>
+            {appointments.length === 0 ? (
+              <p className="text-gray-500 bg-white p-6 rounded shadow">
+                No appointments yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full bg-white shadow rounded overflow-hidden">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Package</th>
+                      <th className="p-3 text-left">Date</th>
+                      <th className="p-3 text-left">Time</th>
+                      <th className="p-3 text-left">Price</th>
+                      <th className="p-3 text-left">Payment</th>
+                      <th className="p-3 text-left">Status</th>
+                      <th className="p-3 text-left">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {appointments.map((a) => (
+                      <tr key={a.id} className="border-t">
+                        <td className="p-3">{a.name}</td>
+                        <td className="p-3">{a.package || "-"}</td>
+                        <td className="p-3">{a.date || "-"}</td>
+                        <td className="p-3">{a.time || "-"}</td>
+                        <td className="p-3">GHC {a.price || 0}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-1 rounded text-white text-sm ${a.paymentStatus === "paid" ? "bg-green-600" : a.paymentStatus === "unpaid" ? "bg-red-500" : "bg-yellow-500"}`}>
+                            {a.paymentStatus === "clinic" ? "Clinic" : (a.paymentStatus || "N/A")}
+                          </span>
+                        </td>
+                        <td className="p-3">
+                          <select
+                            value={a.status || "Pending"}
+                            onChange={(e) => changeStatus(a, e.target.value)}
+                            className={`px-2 py-1 rounded text-white text-sm border-none outline-none cursor-pointer ${statusColor(a.status || "Pending")}`}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                        <td className="p-3">
+                          <button
+                            onClick={() => handleDelete(a)}
+                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition"
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
       </div>

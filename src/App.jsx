@@ -86,6 +86,7 @@ import Login from './Pages/Login'
 import Register from './Pages/Register'
 import Home from './Pages/Home'
 import Chatbot from './Components/Chatbot'
+import Admin from './Components/Admin'
 
 import useAuthStore from './Context/authStore'
 
@@ -118,6 +119,7 @@ const App = () => {
             <Route path="/PackageDetails" element={<PackageDetails />} />
             <Route path="/MyAppointment" element={<MyAppointment />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/admin" element={<Admin />} />
           </>
         )}
 

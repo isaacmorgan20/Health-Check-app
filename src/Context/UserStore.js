@@ -18,11 +18,19 @@ const useUserStore = create((set) => ({
             set({ users: [] });
             return;
         }
-        const q = query(collection(db, "users"), where("uid", "==", uid));
+        const q = query(collection(db, "users"), where("userUid", "==", uid));
         const snapShot = await getDocs(q);
         const userData = snapShot.docs.map((docSnap) => ({
             id: docSnap.id, ...docSnap.data()
         }))
+        set({ users: userData })
+    },
+
+    fetchAppointments: async () => {
+        const snapShot = await getDocs(collection(db, "users"));
+        const userData = snapShot.docs
+            .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+            .filter((doc) => !doc.uid);
         set({ users: userData })
     },
 
@@ -31,6 +39,7 @@ const useUserStore = create((set) => ({
         set((state) => ({
             users: [...state.users, {id: docRef.id, ...user}]
         }))
+        return docRef.id
     },
     
     deleteUser: async(id) => {

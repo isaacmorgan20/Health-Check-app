@@ -1,18 +1,23 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import useUserStore from '../Context/UserStore'
 import useAgentStore from '../Context/agentStore'
 import useAuthStore from '../Context/authStore'
-import {
-  Navigate, useLocation, //useNavigate 
-
-} from 'react-router-dom'
 import packs from '../Data/pack'
+import promos from '../Data/promos'
+
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
+
+const makeReference = () =>
+  "HC-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)
 
 const Book = () => {
-  // const navigate = useNavigate()
   const location = useLocation()
+  const navigate = useNavigate()
   const selectedPackage = location.state?.selectedPackage
   const addNewUser = useUserStore((state) => state.addNewUser)
+  const updateUser = useUserStore((state) => state.updateUser)
   const authUser = useAuthStore((state) => state.user)
 
   const bookingDraft = useAgentStore((state) => state.bookingDraft)
@@ -32,24 +37,141 @@ const Book = () => {
   const [time, setTime] = useState(bookingDraft?.time || "")
   const [notes, setNotes] = useState(bookingDraft?.notes || "")
   const [selected, setSelected] = useState(initialPackage?.name)
+  const [paymentMethod, setPaymentMethod] = useState("clinic")
+  const [promoCode, setPromoCode] = useState("")
+  const [promoApplied, setPromoApplied] = useState(null)
 
   const submittedRef = useRef(false)
 
-  const saveAppointment = useCallback((user) => {
-    addNewUser({ ...user, uid: authUser?.uid })
+  const selectedPkg = packs.find((p) => p.name === selected)
+  const price = selectedPkg?.price || 0
+  const discount = promoApplied?.discount || 0
+  const finalPrice = Math.round(price * (1 - discount / 100))
 
+  const notifyBooking = async (appointment, reference) => {
+    if (!appointment.email) return
+    try {
+      await fetch(`${BACKEND_URL}/notify-booking`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: appointment.email,
+          name: appointment.name,
+          package: appointment.package,
+          date: appointment.date,
+          time: appointment.time,
+          reference: reference || null,
+        }),
+      })
+    } catch (error) {
+      console.error("Notify failed:", error)
+    }
+  }
+
+  const resetFields = () => {
     setName("")
     setContact("")
     setEmail("")
     setDate("")
     setTime("")
     setNotes("")
-  }, [addNewUser, authUser])
+    setPromoCode("")
+    setPromoApplied(null)
+    setPaymentMethod("clinic")
+  }
 
-  const handleSubmit = (e) => {
+  const saveAppointment = useCallback(async (fields) => {
+    const pkg = packs.find((p) => p.name === fields.package) || null
+    const pkgPrice = pkg?.price || 0
+    const discountPct = promoApplied?.discount || 0
+    const appointment = {
+      name: fields.name,
+      contact: fields.contact,
+      email: fields.email,
+      date: fields.date,
+      time: fields.time,
+      notes: fields.notes,
+      package: pkg?.name || fields.package,
+      price: Math.round(pkgPrice * (1 - discountPct / 100)),
+      originalPrice: pkgPrice,
+      userUid: authUser?.uid,
+      paymentStatus: paymentMethod === "online" ? "unpaid" : "clinic",
+      ...(promoApplied ? { promoCode: promoApplied.code, discountPct } : {}),
+      createdAt: Date.now(),
+    }
+    try {
+      const docId = await addNewUser(appointment)
+      resetFields()
+      return docId
+    } catch (error) {
+      alert(error.message)
+      return null
+    }
+  }, [addNewUser, authUser, promoApplied, paymentMethod])
+
+  const openPaystack = (appointment, amount, docId) => {
+    if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {
+      alert("Online payment is not configured yet. Your appointment is saved — pay at the clinic.")
+      return
+    }
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: appointment.email || authUser?.email || "guest@herbalcenter.app",
+      amount: Math.round(amount * 100),
+      currency: "GHS",
+      ref: makeReference(),
+      callback: async (response) => {
+        await updateUser(docId, {
+          paymentStatus: "paid",
+          paymentReference: response.reference,
+          paidAt: Date.now(),
+        })
+        notifyBooking(appointment, response.reference)
+        alert("Payment successful! Your appointment is confirmed.")
+        navigate("/MyAppointment")
+      },
+      onClose: () => {
+        alert("Payment window closed. Your appointment is saved — you can pay from My Appointments.")
+        navigate("/MyAppointment")
+      },
+    })
+    handler.openIframe()
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    saveAppointment({ name, contact, email, date, time, notes })
+    const appointment = {
+      name, contact, email, date, time,
+      notes: notes || "Booked via Herbal Center",
+      package: selected,
+    }
+
+    const docId = await saveAppointment(appointment)
+    if (!docId) return
+
+    if (paymentMethod === "online" && PAYSTACK_PUBLIC_KEY) {
+      openPaystack(appointment, finalPrice, docId)
+    } else {
+      if (paymentMethod === "online") {
+        alert("Online payment is not configured yet. Your appointment is saved — pay from My Appointments.")
+      }
+      notifyBooking(appointment)
+      navigate("/MyAppointment")
+    }
+  }
+
+  const applyPromo = () => {
+    const code = promoCode.trim().toUpperCase()
+    if (!code) return
+    const found = promos.find((p) => p.code === code)
+    if (found) {
+      setPromoApplied(found)
+      alert(`Promo applied: ${found.discount}% off`)
+    } else {
+      setPromoApplied(null)
+      alert("That promo code is not valid.")
+    }
   }
 
   // Auto-submit when the AI agent has all the required details
@@ -59,20 +181,20 @@ const Book = () => {
 
     submittedRef.current = true
 
-    const timer = setTimeout(() => {
-      saveAppointment({
-        name,
-        contact,
-        email,
-        date,
-        time,
+    const timer = setTimeout(async () => {
+      const fields = {
+        name, contact, email, date, time,
         notes: notes || "Booked via HealthAssist AI",
-      })
+        package: initialPackage?.name,
+      }
+      await saveAppointment(fields)
+      notifyBooking(fields)
       clearBookingDraft()
+      navigate("/MyAppointment")
     }, 0)
 
     return () => clearTimeout(timer)
-  }, [autoSubmit, name, contact, email, date, time, notes, clearBookingDraft, saveAppointment])
+  }, [autoSubmit, name, contact, email, date, time, notes, initialPackage, clearBookingDraft, saveAppointment, navigate])
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">
@@ -105,22 +227,30 @@ const Book = () => {
 
           {initialPackage ? (
             <>
-
               <h1 className="mt-3 text-gray-700">
                 <strong>Name:</strong> {initialPackage.name}
               </h1>
 
-              <p className="text-green-600 font-bold mt-1">
-                <strong>Price:</strong> GHC {initialPackage.price}
-              </p>
-
+              {promoApplied ? (
+                <>
+                  <p className="text-gray-500 mt-1 line-through">
+                    <strong>Original:</strong> GHC {initialPackage.price}
+                  </p>
+                  <p className="text-green-600 font-bold mt-1">
+                    <strong>Discounted:</strong> GHC {Math.round(initialPackage.price * (1 - discount / 100))}
+                    {" "}({promoApplied.code} applied)
+                  </p>
+                </>
+              ) : (
+                <p className="text-green-600 font-bold mt-1">
+                  <strong>Price:</strong> GHC {initialPackage.price}
+                </p>
+              )}
             </>
           ) : (
-
             <p className="text-gray-600 text-sm mt-2">
               Please select a package from the Packages page.
             </p>
-
           )}
 
         </div>
@@ -159,28 +289,24 @@ const Book = () => {
 
             <select
               className="w-full mt-2 border border-gray-300 p-3 rounded-lg outline-none focus:border-blue-500"
-              // defaultValue={selectedPackage?.name || ""}
               value={selected}
-              onChange={(e) => setSelected(e.target.value)}
+              onChange={(e) => {
+                setSelected(e.target.value)
+                setPromoApplied(null)
+                setPromoCode("")
+              }}
             >
-
-              {/* Automatically show selected package first */}
               {initialPackage && (
                 <option value={initialPackage.name}>
                   {initialPackage.name}
                 </option>
               )}
 
-              {/* Other packages */}
               {packs.map((item) => (
-                <option
-                  key={item.id}
-                  value={item.name}
-                >
+                <option key={item.id} value={item.name}>
                   {item.name} - GHS {item.price}
                 </option>
               ))}
-
             </select>
           </div>
 
@@ -221,6 +347,79 @@ const Book = () => {
 
           </div>
 
+          {/* Promo Code */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">Promo Code</label>
+            <div className="flex gap-2 mt-1">
+              <input
+                type="text"
+                placeholder="Enter promo code (e.g. WELCOME10)"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <button
+                type="button"
+                onClick={applyPromo}
+                className="bg-blue-700 hover:bg-blue-800 text-white px-4 rounded-lg transition text-sm font-semibold"
+              >
+                Apply
+              </button>
+            </div>
+            {promoApplied && (
+              <p className="text-green-600 text-sm mt-1">
+                {promoApplied.code} applied — {promoApplied.discount}% off
+              </p>
+            )}
+          </div>
+
+          {/* Payment Method */}
+          <div>
+            <label className="text-sm font-medium text-gray-700">Payment Method</label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-2">
+              <label
+                className={`border rounded-lg p-3 flex items-center gap-2 cursor-pointer transition ${
+                  paymentMethod === "clinic" ? "border-green-500 bg-green-50" : "border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "clinic"}
+                  onChange={() => setPaymentMethod("clinic")}
+                  className="accent-green-600"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Pay at Clinic</p>
+                  <p className="text-xs text-gray-500">Cash or Momo on arrival</p>
+                </div>
+              </label>
+
+              <label
+                className={`border rounded-lg p-3 flex items-center gap-2 cursor-pointer transition ${
+                  paymentMethod === "online" ? "border-green-500 bg-green-50" : "border-gray-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={paymentMethod === "online"}
+                  onChange={() => setPaymentMethod("online")}
+                  className="accent-green-600"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">Pay Online</p>
+                  <p className="text-xs text-gray-500">Mobile Money / Card via Paystack</p>
+                </div>
+              </label>
+            </div>
+            {paymentMethod === "online" && !PAYSTACK_PUBLIC_KEY && (
+              <p className="text-amber-600 text-sm mt-1">
+                Online payment is not configured yet — add your Paystack public key to enable it.
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium text-gray-700">Additional Notes</label>
             <textarea
@@ -232,20 +431,24 @@ const Book = () => {
             />
           </div>
 
+          {/* Total */}
+          <div className="p-4 bg-blue-50 rounded-lg flex justify-between items-center">
+            <span className="font-semibold text-blue-900">Total</span>
+            <span className="font-bold text-xl text-blue-900">
+              GHC {finalPrice || price}
+              {discount > 0 && (
+                <span className="text-sm text-gray-500 font-normal line-through ml-2">
+                  GHC {price}
+                </span>
+              )}
+            </span>
+          </div>
+
           <button
             type="submit"
-            // onClick={(e) => {
-            //   e.preventDefault()
-
-            //   Navigate('/Myappointment', {
-            //     state: {
-            //       package: selectedPackage
-            //     }
-            //   })
-            // }}
             className="w-full bg-blue-900 text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold"
           >
-            Book Appointment
+            {paymentMethod === "online" ? "Book & Pay" : "Book Appointment"}
           </button>
 
         </form>

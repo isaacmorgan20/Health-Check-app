@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle } from "lucide-react";
+import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle, Mic, Square } from "lucide-react";
 import useChatStore from "../Context/chatStore";
 import useAgentStore from "../Context/agentStore";
 import useAuthStore from "../Context/authStore";
@@ -22,7 +22,9 @@ const Chatbot = () => {
   ]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   const suggestions = [
     "Book an appointment",
@@ -137,6 +139,37 @@ const Chatbot = () => {
     if (e.key === "Enter") {
       handleSendMessage();
     }
+  };
+
+  // Voice input via Web Speech API
+  const toggleVoice = () => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert("Voice input is not supported in this browser. Try Chrome or Edge.");
+      return;
+    }
+
+    const recognition = new SR();
+    recognition.lang = "en-GH";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setInput((prev) => (prev ? prev + " " : "") + transcript);
+    };
+    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => setIsListening(false);
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
   };
 
   // Utility function to format simple markdown-like text (**bold** and \n linebreaks)
@@ -285,6 +318,18 @@ const Chatbot = () => {
               disabled={isLoading}
               className="flex-1 bg-slate-800/60 border border-slate-700/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
             />
+            <button
+              onClick={toggleVoice}
+              disabled={isLoading}
+              title={isListening ? "Stop" : "Speak"}
+              className={`p-3 rounded-xl transition duration-200 disabled:opacity-50 focus:outline-none ${
+                isListening
+                  ? "bg-red-600 hover:bg-red-700 text-white animate-pulse"
+                  : "bg-slate-700 hover:bg-slate-600 text-white"
+              }`}
+            >
+              {isListening ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            </button>
             <button
               onClick={() => handleSendMessage()}
               disabled={isLoading || !input.trim()}

@@ -4,6 +4,7 @@ import HeroPage from '../Components/HeroPage'
 import ServiceComp from '../Components/ServiceComp'
 import HealthPack from '../Components/HealthPack'
 import Works from '../Components/Works'
+import ClinicInfo from '../Components/ClinicInfo'
 import Footer from '../Components/Footer'
 
 const Home = () => {
@@ -14,6 +15,7 @@ const Home = () => {
         <ServiceComp/>
         <HealthPack/>
         <Works/>
+        <ClinicInfo/>
         <Footer/>
     </section>
   )

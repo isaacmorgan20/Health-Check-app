@@ -2,14 +2,101 @@ import React, { useEffect } from 'react'
 import useUserStore from '../Context/UserStore'
 import useAuthStore from '../Context/authStore'
 
+const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
+
+const makeReference = () =>
+  "HC-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)
+
 const MyAppoint = () => {
   const users = useUserStore((state) => state.users)
   const fetchUserByUid = useUserStore((state) => state.fetchUserByUid)
+  const updateUser = useUserStore((state) => state.updateUser)
+  const deleteUser = useUserStore((state) => state.deleteUser)
   const currentUser = useAuthStore((state) => state.user)
 
   useEffect(() => {
     fetchUserByUid(currentUser?.uid)
   }, [fetchUserByUid, currentUser])
+
+  const payNow = (user) => {
+    if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {
+      alert("Online payment is not configured yet. Please pay at the clinic.")
+      return
+    }
+    const handler = window.PaystackPop.setup({
+      key: PAYSTACK_PUBLIC_KEY,
+      email: user.email || currentUser?.email || "guest@herbalcenter.app",
+      amount: Math.round((user.price || 0) * 100),
+      currency: "GHS",
+      ref: makeReference(),
+      callback: async (response) => {
+        await updateUser(user.id, {
+          paymentStatus: "paid",
+          paymentReference: response.reference,
+          paidAt: Date.now(),
+        })
+        alert("Payment successful!")
+        fetchUserByUid(currentUser?.uid)
+      },
+    })
+    handler.openIframe()
+  }
+
+  const handleDelete = async (user) => {
+    if (window.confirm("Cancel this appointment?")) {
+      await deleteUser(user.id)
+    }
+  }
+
+  const downloadReceipt = (user) => {
+    const win = window.open("", "_blank", "width=600,height=700")
+    win.document.write(`
+      <html>
+        <head><title>Receipt - Herbal Center</title>
+        <style>
+          body { font-family: Arial, sans-serif; padding: 40px; color: #111; }
+          h1 { color: #1e3a8a; margin: 0 0 4px; }
+          .sub { color: #666; margin: 0 0 24px; }
+          .box { border: 1px solid #ddd; border-radius: 8px; padding: 20px; }
+          .row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #f0f0f0; }
+          .row:last-child { border-bottom: none; }
+          .total { display: flex; justify-content: space-between; font-weight: bold; margin-top: 16px; font-size: 18px; }
+          .status { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px;
+            ${user.paymentStatus === "paid" ? "background:#dcfce7;color:#166534;" : "background:#fef9c3;color:#854d0e;"} }
+          @media print { .no-print { display: none; } }
+        </style></head>
+        <body>
+          <h1>Herbal Homeopathic Center</h1>
+          <p class="sub">Appointment Receipt</p>
+          <div class="box">
+            <div class="row"><span>Patient</span><strong>${user.name || "-"}</strong></div>
+            <div class="row"><span>Package</span><strong>${user.package || "-"}</strong></div>
+            <div class="row"><span>Date</span><strong>${user.date || "-"}</strong></div>
+            <div class="row"><span>Time</span><strong>${user.time || "-"}</strong></div>
+            <div class="row"><span>Payment</span><span class="status">${(user.paymentStatus || "unpaid").toUpperCase()}</span></div>
+            ${user.promoCode ? `<div class="row"><span>Promo</span><strong>${user.promoCode}</strong></div>` : ""}
+            ${user.paymentReference ? `<div class="row"><span>Reference</span><strong>${user.paymentReference}</strong></div>` : ""}
+            <div class="total"><span>Total</span><span>GHC ${user.price || 0}</span></div>
+          </div>
+          <p style="margin-top:24px;font-size:12px;color:#888;">
+            Thank you for choosing Herbal Homeopathic Center.
+          </p>
+          <button class="no-print" onclick="window.print()" style="margin-top:20px;padding:10px 20px;border:none;background:#1e3a8a;color:#fff;border-radius:6px;cursor:pointer;">Print / Save as PDF</button>
+        </body>
+      </html>
+    `)
+    win.document.close()
+  }
+
+  const paymentBadge = (user) => {
+    if (user.paymentStatus === "paid") {
+      return <span className="text-xs bg-green-100 text-green-700 px-3 py-1 rounded-full font-semibold">Paid</span>
+    }
+    if (user.paymentStatus === "clinic") {
+      return <span className="text-xs bg-yellow-100 text-yellow-700 px-3 py-1 rounded-full font-semibold">Pay at Clinic</span>
+    }
+    return <span className="text-xs bg-red-100 text-red-600 px-3 py-1 rounded-full font-semibold">Payment Due</span>
+  }
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">
@@ -53,21 +140,23 @@ const MyAppoint = () => {
                     {user.name}
                   </h2>
 
-                  <span className="text-xs bg-blue-100 text-blue-800 px-3 py-1 rounded-full">
-                    Appointment
-                  </span>
+                  {paymentBadge(user)}
                 </div>
 
                 {/* Info grid */}
                 <div className="grid md:grid-cols-2 gap-3 text-sm text-gray-600">
 
+                  <p><span className="font-semibold text-gray-800">Package:</span> {user.package || "-"}</p>
+
                   <p><span className="font-semibold text-gray-800">Contact:</span> {user.contact}</p>
 
-                  <p><span className="font-semibold text-gray-800">Email:</span> {user.email}</p>
+                  <p><span className="font-semibold text-gray-800">Email:</span> {user.email || "-"}</p>
 
                   <p><span className="font-semibold text-gray-800">Time:</span> {user.time}</p>
 
                   <p><span className="font-semibold text-gray-800">Date:</span> {user.date || "Not set"}</p>
+
+                  <p><span className="font-semibold text-gray-800">Price:</span> GHC {user.price || 0}</p>
 
                 </div>
 
@@ -77,6 +166,34 @@ const MyAppoint = () => {
                     <span className="font-semibold text-gray-800">Notes:</span> {user.notes}
                   </div>
                 )}
+
+                {/* Actions */}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {user.paymentStatus === "unpaid" && PAYSTACK_PUBLIC_KEY && (
+                    <button
+                      onClick={() => payNow(user)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                    >
+                      Pay Now
+                    </button>
+                  )}
+
+                  {user.paymentStatus && (
+                    <button
+                      onClick={() => downloadReceipt(user)}
+                      className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                    >
+                      Receipt
+                    </button>
+                  )}
+
+                  <button
+                    onClick={() => handleDelete(user)}
+                    className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
 
               </div>
             ))}

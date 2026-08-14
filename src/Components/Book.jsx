@@ -60,6 +60,9 @@ const Book = () => {
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
+  const minDateKey = toDateKey(today)
+  const maxDateKey = `${today.getFullYear()}-12-31`
+
   const availableDates = []
   {
     for (let i = 0; i < 400; i++) {
@@ -74,30 +77,16 @@ const Book = () => {
     }
   }
 
-  const months = []
-  {
-    const firstMonth = today.getMonth()
-    for (let m = firstMonth; m <= 11; m++) {
-      const first = new Date(today.getFullYear(), m, 1)
-      const daysInMonth = new Date(today.getFullYear(), m + 1, 0).getDate()
-      const cells = []
-      for (let b = 0; b < first.getDay(); b++) cells.push(null)
-      for (let d = 1; d <= daysInMonth; d++) {
-        const dt = new Date(today.getFullYear(), m, d)
-        const key = toDateKey(dt)
-        const dayKey = DAY_KEYS[dt.getDay()]
-        const open =
-          dt >= today &&
-          !!weeklyHours[dayKey] &&
-          !blockedDates.includes(key) &&
-          timeSlots.some((slot) => !blockedSlots.some((b) => b.date === key && b.time === slot))
-        cells.push({ key, day: d, open, past: dt < today })
-      }
-      months.push({
-        label: first.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
-        cells,
-      })
-    }
+  const isOpenDate = (key) => {
+    const d = new Date(key + "T00:00:00")
+    if (d < today) return false
+    if (d.getFullYear() !== today.getFullYear()) return false
+    const dayKey = DAY_KEYS[d.getDay()]
+    if (!weeklyHours[dayKey]) return false
+    if (blockedDates.includes(key)) return false
+    return timeSlots.some(
+      (slot) => !blockedSlots.some((b) => b.date === key && b.time === slot)
+    )
   }
 
   const bookingDraft = useAgentStore((state) => state.bookingDraft)
@@ -422,50 +411,26 @@ const Book = () => {
 
             <div>
               <label className="text-sm font-medium text-gray-700">Date</label>
-              {months.length === 0 ? (
-                <p className="mt-1 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-3">
-                  No dates available right now. Please check back later.
-                </p>
-              ) : (
-                <div className="mt-2 space-y-6 max-h-96 overflow-y-auto pr-1">
-                  {months.map((month) => (
-                    <div key={month.label}>
-                      <p className="font-semibold text-blue-900 mb-2">{month.label}</p>
-                      <div className="grid grid-cols-7 gap-1">
-                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
-                          <div key={d} className="text-center text-[10px] text-gray-400 font-medium">
-                            {d}
-                          </div>
-                        ))}
-                        {month.cells.map((cell, i) =>
-                          cell === null ? (
-                            <div key={`b${i}`} />
-                          ) : (
-                            <button
-                              key={cell.key}
-                              type="button"
-                              disabled={!cell.open}
-                              onClick={() => {
-                                setDate(cell.key)
-                                setTime("")
-                              }}
-                              className={`aspect-square rounded-lg text-sm font-semibold flex items-center justify-center transition ${
-                                cell.key === effectiveDate
-                                  ? "bg-blue-900 text-white ring-2 ring-blue-300"
-                                  : cell.open
-                                  ? "bg-white border border-blue-200 text-blue-900 hover:bg-blue-100"
-                                  : "bg-gray-100 text-gray-300 line-through cursor-not-allowed"
-                              }`}
-                            >
-                              {cell.day}
-                            </button>
-                          )
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <input
+                type="date"
+                min={minDateKey}
+                max={maxDateKey}
+                value={effectiveDate}
+                onChange={(e) => {
+                  const key = e.target.value
+                  if (isOpenDate(key)) {
+                    setDate(key)
+                    setTime("")
+                  } else {
+                    alert("That date is not available for booking. Please pick an open date.")
+                  }
+                }}
+                required
+                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+              <p className="text-xs text-gray-400 mt-1">
+                Pick any open date. Closed days and booked slots are not selectable.
+              </p>
             </div>
 
             <div>

@@ -87,6 +87,14 @@ const Admin = () => {
     setAdminMessage("");
   };
 
+  const conversations = appointments
+    .filter((a) => (a.messages || []).length > 0)
+    .map((a) => ({
+      ...a,
+      lastMessage: [...(a.messages || [])].sort((x, y) => y.at - x.at)[0],
+    }))
+    .sort((x, y) => y.lastMessage.at - x.lastMessage.at);
+
   const exportCSV = () => {
     const headers = ["Name", "Package", "Date", "Time", "Price", "Payment", "Status", "Contact", "Email"];
     const rows = filtered.map((a) => [
@@ -178,6 +186,13 @@ const Admin = () => {
             onClick={() => setActiveTab("users")}
           >
             Users
+          </li>
+
+          <li
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "messages" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            onClick={() => setActiveTab("messages")}
+          >
+            Messages
           </li>
         </ul>
       </div>
@@ -510,6 +525,52 @@ const Admin = () => {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Messages */}
+        {activeTab === "messages" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Messages</h2>
+
+            {conversations.length === 0 ? (
+              <p className="text-gray-500 bg-white p-6 rounded shadow">
+                No messages yet. Client replies will show up here.
+              </p>
+            ) : (
+              <div className="bg-white shadow rounded overflow-hidden">
+                {conversations.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => openMessage(a)}
+                    className="w-full text-left px-5 py-4 border-b border-gray-100 hover:bg-blue-50 transition flex items-center gap-4"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-blue-900 truncate">
+                          {a.name}
+                        </span>
+                        {a.lastMessage.from === "client" && (
+                          <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                            New reply
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-500 mt-0.5 truncate">
+                        {a.lastMessage.from === "admin" ? "You: " : `${a.name}: `}
+                        {a.lastMessage.text}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        {a.package || "Appointment"} · {new Date(a.lastMessage.at).toLocaleString()}
+                      </p>
+                    </div>
+                    <span className="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">
+                      {(a.messages || []).length}
+                    </span>
+                  </button>
+                ))}
               </div>
             )}
           </div>

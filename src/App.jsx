@@ -82,6 +82,7 @@ import Packages from './Pages/Packages'
 import PackageDetails from './Pages/PackageDetails'
 import MyAppointment from './Pages/MyAppointment'
 import Settings from './Pages/Settings'
+import Messages from './Pages/Messages'
 import Login from './Pages/Login'
 import Register from './Pages/Register'
 import Home from './Pages/Home'
@@ -120,6 +121,7 @@ const App = () => {
             <Route path="/Packages" element={<Packages />} />
             <Route path="/PackageDetails" element={<PackageDetails />} />
             <Route path="/MyAppointment" element={<MyAppointment />} />
+            <Route path="/messages" element={<Messages />} />
             <Route path="/settings" element={<Settings />} />
             {admin && <Route path="/admin" element={<Admin />} />}
           </>

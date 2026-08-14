@@ -61,6 +61,10 @@ const NavBar = () => {
             My Appointment
           </Link>
 
+          <Link to="/messages" className="hover:text-green-400 transition">
+            Messages
+          </Link>
+
           <Link to="/settings" className="hover:text-green-400 transition">
             Settings
           </Link>
@@ -142,6 +146,14 @@ const NavBar = () => {
             className="hover:text-green-400 transition"
           >
             My Appointment
+          </Link>
+
+          <Link
+            to="/messages"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            Messages
           </Link>
 
           <Link

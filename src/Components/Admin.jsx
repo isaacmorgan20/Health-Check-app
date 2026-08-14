@@ -29,12 +29,12 @@ const Admin = () => {
   ];
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-64 bg-blue-900 text-white p-5">
+      <div className="w-full md:w-64 bg-blue-900 text-white p-5">
         <h1 className="text-2xl font-bold mb-8">Health Admin</h1>
 
-        <ul className="space-y-3">
+        <ul className="flex md:flex-col gap-3 md:space-y-3 overflow-x-auto pb-2 md:pb-0">
           <li
             className={`p-2 rounded cursor-pointer ${activeTab === "dashboard" ? "bg-blue-700" : "hover:bg-blue-800"}`}
             onClick={() => setActiveTab("dashboard")}
@@ -66,7 +66,7 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold mb-6">Dashboard Overview</h2>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="bg-white p-4 rounded shadow">
                 <h3 className="text-lg font-semibold">Total Appointments</h3>
                 <p className="text-2xl">{appointments.length}</p>
@@ -92,7 +92,8 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold mb-4">Appointments</h2>
 
-            <table className="w-full bg-white shadow rounded overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full bg-white shadow rounded overflow-hidden">
               <thead className="bg-gray-200">
                 <tr>
                   <th className="p-3 text-left">Name</th>
@@ -118,6 +119,7 @@ const Admin = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         )}
 
@@ -126,7 +128,7 @@ const Admin = () => {
           <div>
             <h2 className="text-2xl font-bold mb-4">Packages</h2>
 
-            <div className="grid md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {packages.map((p) => (
                 <div key={p.id} className="bg-white p-4 rounded shadow">
                   <h3 className="text-lg font-semibold">{p.name}</h3>

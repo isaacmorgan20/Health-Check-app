@@ -77,7 +77,7 @@ const NavBar = () => {
 
           {user ? (
             <>
-              <div className="bg-blue-800 px-3 py-1 rounded-lg text-xs">
+              <div className="hidden sm:block bg-blue-800 px-3 py-1 rounded-lg text-xs">
                 <p className="text-gray-300">Welcome</p>
 
                 <p className="font-semibold truncate max-w-[100px]">

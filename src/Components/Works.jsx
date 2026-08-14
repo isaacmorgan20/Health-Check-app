@@ -17,7 +17,7 @@ const Works = () => {
       </div>
 
       {/* Steps */}
-      <div className="mt-12 grid gap-8 md:grid-cols-3 max-w-6xl mx-auto">
+      <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
 
         {steps.map((item) => (
           <div

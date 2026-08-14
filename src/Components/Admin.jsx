@@ -4,6 +4,13 @@ import usePackageStore from "../Context/packageStore";
 import useClinicStore from "../Context/clinicStore";
 import { notifyClient } from "../Utils/notify";
 
+const toDateKey = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
 const Admin = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [search, setSearch] = useState("");
@@ -295,6 +302,10 @@ const Admin = () => {
   };
 
   const [newBlockedDate, setNewBlockedDate] = useState("");
+  const [newSlotDate, setNewSlotDate] = useState("");
+  const [newSlotTime, setNewSlotTime] = useState("");
+
+  const minDate = toDateKey(new Date());
 
   const addBlockedDate = () => {
     if (!newBlockedDate) return;
@@ -309,6 +320,23 @@ const Admin = () => {
     setSettingsForm((f) => ({
       ...f,
       blockedDates: (f?.blockedDates || []).filter((d) => d !== date),
+    }));
+  };
+
+  const addBlockedSlot = () => {
+    if (!newSlotDate || !newSlotTime) return;
+    setSettingsForm((f) => ({
+      ...f,
+      blockedSlots: [...(f?.blockedSlots || []), { date: newSlotDate, time: newSlotTime }],
+    }));
+    setNewSlotDate("");
+    setNewSlotTime("");
+  };
+
+  const removeBlockedSlot = (index) => {
+    setSettingsForm((f) => ({
+      ...f,
+      blockedSlots: (f?.blockedSlots || []).filter((_, i) => i !== index),
     }));
   };
 
@@ -973,6 +1001,7 @@ const Admin = () => {
                 <div className="flex gap-2 mb-2">
                   <input
                     type="date"
+                    min={minDate}
                     value={newBlockedDate}
                     onChange={(e) => setNewBlockedDate(e.target.value)}
                     className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
@@ -994,6 +1023,49 @@ const Admin = () => {
                         {d}
                         <button
                           onClick={() => removeBlockedDate(d)}
+                          className="hover:text-red-900 font-bold"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <span className="text-sm font-medium text-gray-600 block mb-2 mt-4">
+                  Blocked time slots (already booked)
+                </span>
+                <div className="flex gap-2 mb-2 flex-wrap">
+                  <input
+                    type="date"
+                    min={minDate}
+                    value={newSlotDate}
+                    onChange={(e) => setNewSlotDate(e.target.value)}
+                    className="flex-1 min-w-36 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <input
+                    type="time"
+                    value={newSlotTime}
+                    onChange={(e) => setNewSlotTime(e.target.value)}
+                    className="flex-1 min-w-24 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    onClick={addBlockedSlot}
+                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    Block
+                  </button>
+                </div>
+                {(settingsForm.blockedSlots || []).length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(settingsForm.blockedSlots || []).map((s, i) => (
+                      <span
+                        key={i}
+                        className="inline-flex items-center gap-2 bg-red-50 text-red-700 text-sm px-3 py-1 rounded-full"
+                      >
+                        {s.date} @ {s.time}
+                        <button
+                          onClick={() => removeBlockedSlot(i)}
                           className="hover:text-red-900 font-bold"
                         >
                           &times;

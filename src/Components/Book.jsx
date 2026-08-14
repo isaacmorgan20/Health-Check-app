@@ -60,6 +60,7 @@ const Book = () => {
   const timeSlots = clinicSettings.timeSlots || []
   const weeklyHours = clinicSettings.weeklyHours || {}
   const blockedDates = clinicSettings.blockedDates || []
+  const blockedSlots = clinicSettings.blockedSlots || []
 
   const availableDates = []
   {
@@ -98,7 +99,10 @@ const Book = () => {
   const [promoApplied, setPromoApplied] = useState(null)
 
   const effectiveDate = availableDates.includes(date) ? date : (availableDates[0] || "")
-  const effectiveTime = timeSlots.includes(time) ? time : (timeSlots[0] || "")
+  const dateSlots = timeSlots.filter(
+    (slot) => !blockedSlots.some((b) => b.date === effectiveDate && b.time === slot)
+  )
+  const effectiveTime = dateSlots.includes(time) ? time : (dateSlots[0] || "")
 
   const submittedRef = useRef(false)
 
@@ -417,9 +421,9 @@ const Book = () => {
 
             <div>
               <label className="text-sm font-medium text-gray-700">Time</label>
-              {timeSlots.length === 0 ? (
+              {dateSlots.length === 0 ? (
                 <p className="mt-1 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-3">
-                  No time slots available right now. Please check back later.
+                  All time slots for this date are booked. Please pick another date.
                 </p>
               ) : (
                 <select
@@ -428,7 +432,7 @@ const Book = () => {
                   required
                   className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                 >
-                  {timeSlots.map((slot) => (
+                  {dateSlots.map((slot) => (
                     <option key={slot} value={slot}>
                       {formatTimeLabel(slot)}
                     </option>

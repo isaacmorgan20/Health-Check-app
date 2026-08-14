@@ -24,6 +24,7 @@ const DEFAULTS = {
     sun: false,
   },
   blockedDates: [],
+  blockedSlots: [],
 };
 
 const useClinicStore = create((set) => ({

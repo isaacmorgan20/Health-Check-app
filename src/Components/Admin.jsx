@@ -73,12 +73,14 @@ const Admin = () => {
     setAdminMessage("");
   };
 
+  const liveTarget = appointments.find((a) => a.id === messageTarget?.id) || messageTarget;
+
   const sendAdminMessage = async () => {
     const text = adminMessage.trim();
-    if (!text || !messageTarget) return;
-    await updateUser(messageTarget.id, {
+    if (!text || !liveTarget) return;
+    await updateUser(liveTarget.id, {
       messages: [
-        ...(messageTarget.messages || []),
+        ...(liveTarget.messages || []),
         { from: "admin", text, at: Date.now() },
       ],
     });
@@ -297,7 +299,7 @@ const Admin = () => {
                               onClick={() => openMessage(a)}
                               className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
                             >
-                              Message
+                              Message{(a.messages || []).length > 0 ? ` (${a.messages.length})` : ""}
                             </button>
                             <button
                               onClick={() => handleDelete(a)}
@@ -514,11 +516,11 @@ const Admin = () => {
         )}
 
         {/* Message Modal */}
-        {messageTarget && (
+        {messageTarget && liveTarget && (
           <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg space-y-3">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-lg">Message — {messageTarget.name}</h3>
+                <h3 className="font-bold text-lg">Message — {liveTarget.name}</h3>
                 <button
                   onClick={() => setMessageTarget(null)}
                   className="text-gray-400 hover:text-gray-600 text-xl leading-none"
@@ -528,12 +530,12 @@ const Admin = () => {
               </div>
 
               <div className="h-64 overflow-y-auto space-y-2 border border-gray-100 rounded-lg p-3 bg-gray-50">
-                {(messageTarget.messages || []).length === 0 ? (
+                {(liveTarget.messages || []).length === 0 ? (
                   <p className="text-sm text-gray-400 text-center mt-10">
                     No messages yet. Say hi to the patient!
                   </p>
                 ) : (
-                  (messageTarget.messages || []).map((msg, i) => (
+                  (liveTarget.messages || []).map((msg, i) => (
                     <div
                       key={i}
                       className={`p-3 rounded-lg text-sm max-w-[85%] ${
@@ -543,7 +545,7 @@ const Admin = () => {
                       }`}
                     >
                       <p className="font-semibold text-xs mb-0.5">
-                        {msg.from === "admin" ? "Clinic" : messageTarget.name}
+                        {msg.from === "admin" ? "Clinic" : liveTarget.name}
                       </p>
                       {msg.text}
                       <p className="text-[10px] text-gray-500 mt-1">

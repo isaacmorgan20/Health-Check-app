@@ -25,11 +25,6 @@ const toDateKey = (d) => {
   return `${y}-${m}-${day}`
 }
 
-const formatDateLabel = (key) => {
-  const d = new Date(key + "T00:00:00")
-  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })
-}
-
 const formatTimeLabel = (slot) => {
   const [h, m] = slot.split(":").map(Number)
   const ampm = h >= 12 ? "PM" : "AM"
@@ -62,18 +57,46 @@ const Book = () => {
   const blockedDates = clinicSettings.blockedDates || []
   const blockedSlots = clinicSettings.blockedSlots || []
 
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
   const availableDates = []
   {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    for (let i = 0; i < 90; i++) {
+    for (let i = 0; i < 400; i++) {
       const d = new Date(today)
       d.setDate(today.getDate() + i)
+      if (d.getFullYear() !== today.getFullYear()) break
       const key = toDateKey(d)
       const dayKey = DAY_KEYS[d.getDay()]
       if (blockedDates.includes(key)) continue
       if (!weeklyHours[dayKey]) continue
       availableDates.push(key)
+    }
+  }
+
+  const months = []
+  {
+    const firstMonth = today.getMonth()
+    for (let m = firstMonth; m <= 11; m++) {
+      const first = new Date(today.getFullYear(), m, 1)
+      const daysInMonth = new Date(today.getFullYear(), m + 1, 0).getDate()
+      const cells = []
+      for (let b = 0; b < first.getDay(); b++) cells.push(null)
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(today.getFullYear(), m, d)
+        const key = toDateKey(dt)
+        const dayKey = DAY_KEYS[dt.getDay()]
+        const open =
+          dt >= today &&
+          !!weeklyHours[dayKey] &&
+          !blockedDates.includes(key) &&
+          timeSlots.some((slot) => !blockedSlots.some((b) => b.date === key && b.time === slot))
+        cells.push({ key, day: d, open, past: dt < today })
+      }
+      months.push({
+        label: first.toLocaleDateString(undefined, { month: "long", year: "numeric" }),
+        cells,
+      })
     }
   }
 
@@ -399,23 +422,49 @@ const Book = () => {
 
             <div>
               <label className="text-sm font-medium text-gray-700">Date</label>
-              {availableDates.length === 0 ? (
+              {months.length === 0 ? (
                 <p className="mt-1 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-3">
                   No dates available right now. Please check back later.
                 </p>
               ) : (
-                <select
-                  value={effectiveDate}
-                  onChange={(e) => { setDate(e.target.value); setTime("") }}
-                  required
-                  className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                >
-                  {availableDates.map((key) => (
-                    <option key={key} value={key}>
-                      {formatDateLabel(key)}
-                    </option>
+                <div className="mt-2 space-y-6 max-h-96 overflow-y-auto pr-1">
+                  {months.map((month) => (
+                    <div key={month.label}>
+                      <p className="font-semibold text-blue-900 mb-2">{month.label}</p>
+                      <div className="grid grid-cols-7 gap-1">
+                        {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((d) => (
+                          <div key={d} className="text-center text-[10px] text-gray-400 font-medium">
+                            {d}
+                          </div>
+                        ))}
+                        {month.cells.map((cell, i) =>
+                          cell === null ? (
+                            <div key={`b${i}`} />
+                          ) : (
+                            <button
+                              key={cell.key}
+                              type="button"
+                              disabled={!cell.open}
+                              onClick={() => {
+                                setDate(cell.key)
+                                setTime("")
+                              }}
+                              className={`aspect-square rounded-lg text-sm font-semibold flex items-center justify-center transition ${
+                                cell.key === effectiveDate
+                                  ? "bg-blue-900 text-white ring-2 ring-blue-300"
+                                  : cell.open
+                                  ? "bg-white border border-blue-200 text-blue-900 hover:bg-blue-100"
+                                  : "bg-gray-100 text-gray-300 line-through cursor-not-allowed"
+                              }`}
+                            >
+                              {cell.day}
+                            </button>
+                          )
+                        )}
+                      </div>
+                    </div>
                   ))}
-                </select>
+                </div>
               )}
             </div>
 

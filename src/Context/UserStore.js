@@ -56,6 +56,21 @@ const useUserStore = create((set) => ({
         return unsubscribe;
     },
 
+    listenToUserAppointments: (uid) => {
+        if (!uid) {
+            set({ users: [] });
+            return () => {};
+        }
+        const q = query(collection(db, "users"), where("userUid", "==", uid));
+        const unsubscribe = onSnapshot(q, (snapShot) => {
+            const data = snapShot.docs.map((docSnap) => ({
+                id: docSnap.id, ...docSnap.data()
+            }));
+            set({ users: data });
+        });
+        return unsubscribe;
+    },
+
     addNewUser: async (user) => {
         const docRef = await addDoc(collection(db, "users"), user)
         set((state) => ({

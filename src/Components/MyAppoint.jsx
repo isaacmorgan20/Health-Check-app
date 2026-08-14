@@ -1,22 +1,22 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
 import useUserStore from '../Context/UserStore'
 import useAuthStore from '../Context/authStore'
 
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
 
-const makeReference = () =>
-  "HC-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)
-
 const MyAppoint = () => {
   const users = useUserStore((state) => state.users)
-  const fetchUserByUid = useUserStore((state) => state.fetchUserByUid)
+  const listenToUserAppointments = useUserStore((state) => state.listenToUserAppointments)
   const updateUser = useUserStore((state) => state.updateUser)
   const deleteUser = useUserStore((state) => state.deleteUser)
   const currentUser = useAuthStore((state) => state.user)
 
+  const [reply, setReply] = useState({})
+
   useEffect(() => {
-    fetchUserByUid(currentUser?.uid)
-  }, [fetchUserByUid, currentUser])
+    const unsubscribe = listenToUserAppointments(currentUser?.uid)
+    return () => unsubscribe && unsubscribe()
+  }, [listenToUserAppointments, currentUser])
 
   const payNow = (user) => {
     if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {
@@ -36,7 +36,6 @@ const MyAppoint = () => {
           paidAt: Date.now(),
         })
         alert("Payment successful!")
-        fetchUserByUid(currentUser?.uid)
       },
     })
     handler.openIframe()
@@ -46,6 +45,18 @@ const MyAppoint = () => {
     if (window.confirm("Cancel this appointment?")) {
       await deleteUser(user.id)
     }
+  }
+
+  const sendReply = async (user) => {
+    const text = (reply[user.id] || "").trim()
+    if (!text) return
+    await updateUser(user.id, {
+      messages: [
+        ...(user.messages || []),
+        { from: "client", text, at: Date.now() },
+      ],
+    })
+    setReply((prev) => ({ ...prev, [user.id]: "" }))
   }
 
   const downloadReceipt = (user) => {
@@ -86,6 +97,21 @@ const MyAppoint = () => {
       </html>
     `)
     win.document.close()
+  }
+
+  const statusBadge = (user) => {
+    const status = user.status || "Pending"
+    const colors = {
+      Confirmed: "bg-green-100 text-green-700",
+      Completed: "bg-blue-100 text-blue-700",
+      Cancelled: "bg-red-100 text-red-600",
+      Pending: "bg-yellow-100 text-yellow-700",
+    }
+    return (
+      <span className={`text-xs px-3 py-1 rounded-full font-semibold ${colors[status] || colors.Pending}`}>
+        {status}
+      </span>
+    )
   }
 
   const paymentBadge = (user) => {
@@ -135,12 +161,15 @@ const MyAppoint = () => {
               >
 
                 {/* Top row */}
-                <div className="flex justify-between items-center mb-4">
+                <div className="flex flex-wrap justify-between items-center gap-2 mb-4">
                   <h2 className="text-lg font-bold text-blue-900">
                     {user.name}
                   </h2>
 
-                  {paymentBadge(user)}
+                  <div className="flex gap-2">
+                    {statusBadge(user)}
+                    {paymentBadge(user)}
+                  </div>
                 </div>
 
                 {/* Info grid */}
@@ -166,6 +195,44 @@ const MyAppoint = () => {
                     <span className="font-semibold text-gray-800">Notes:</span> {user.notes}
                   </div>
                 )}
+
+                {/* Messages thread */}
+                {(user.messages || []).length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    {(user.messages || []).map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`p-3 rounded-lg text-sm max-w-[85%] ${
+                          msg.from === "admin"
+                            ? "bg-blue-50 border border-blue-100 text-blue-900"
+                            : "bg-green-50 border border-green-100 text-green-900 ml-auto"
+                        }`}
+                      >
+                        <p className="font-semibold text-xs mb-0.5">
+                          {msg.from === "admin" ? "Clinic" : "You"}
+                        </p>
+                        {msg.text}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Reply box */}
+                <div className="mt-4 flex gap-2">
+                  <input
+                    type="text"
+                    placeholder="Send a message to the clinic..."
+                    value={reply[user.id] || ""}
+                    onChange={(e) => setReply({ ...reply, [user.id]: e.target.value })}
+                    className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    onClick={() => sendReply(user)}
+                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    Send
+                  </button>
+                </div>
 
                 {/* Actions */}
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -205,5 +272,8 @@ const MyAppoint = () => {
     </section>
   )
 }
+
+const makeReference = () =>
+  "HC-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)
 
 export default MyAppoint

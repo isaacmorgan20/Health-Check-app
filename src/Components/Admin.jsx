@@ -24,6 +24,8 @@ const Admin = () => {
   const [editingPkg, setEditingPkg] = useState(null);
   const [newPkg, setNewPkg] = useState({ name: "", description: "", price: 0 });
   const [showAddForm, setShowAddForm] = useState(false);
+  const [messageTarget, setMessageTarget] = useState(null);
+  const [adminMessage, setAdminMessage] = useState("");
 
   useEffect(() => {
     const unsubUsers = listenToUsers();
@@ -64,6 +66,23 @@ const Admin = () => {
     if (window.confirm(`Delete appointment for ${appointment.name}?`)) {
       await deleteUser(appointment.id);
     }
+  };
+
+  const openMessage = (appointment) => {
+    setMessageTarget(appointment);
+    setAdminMessage("");
+  };
+
+  const sendAdminMessage = async () => {
+    const text = adminMessage.trim();
+    if (!text || !messageTarget) return;
+    await updateUser(messageTarget.id, {
+      messages: [
+        ...(messageTarget.messages || []),
+        { from: "admin", text, at: Date.now() },
+      ],
+    });
+    setAdminMessage("");
   };
 
   const exportCSV = () => {
@@ -273,12 +292,20 @@ const Admin = () => {
                           </select>
                         </td>
                         <td className="p-3">
-                          <button
-                            onClick={() => handleDelete(a)}
-                            className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition"
-                          >
-                            Delete
-                          </button>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => openMessage(a)}
+                              className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
+                            >
+                              Message
+                            </button>
+                            <button
+                              onClick={() => handleDelete(a)}
+                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -483,6 +510,67 @@ const Admin = () => {
                 </table>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Message Modal */}
+        {messageTarget && (
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-lg space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-lg">Message — {messageTarget.name}</h3>
+                <button
+                  onClick={() => setMessageTarget(null)}
+                  className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+                >
+                  &times;
+                </button>
+              </div>
+
+              <div className="h-64 overflow-y-auto space-y-2 border border-gray-100 rounded-lg p-3 bg-gray-50">
+                {(messageTarget.messages || []).length === 0 ? (
+                  <p className="text-sm text-gray-400 text-center mt-10">
+                    No messages yet. Say hi to the patient!
+                  </p>
+                ) : (
+                  (messageTarget.messages || []).map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`p-3 rounded-lg text-sm max-w-[85%] ${
+                        msg.from === "admin"
+                          ? "bg-blue-100 text-blue-900"
+                          : "bg-green-100 text-green-900 ml-auto"
+                      }`}
+                    >
+                      <p className="font-semibold text-xs mb-0.5">
+                        {msg.from === "admin" ? "Clinic" : messageTarget.name}
+                      </p>
+                      {msg.text}
+                      <p className="text-[10px] text-gray-500 mt-1">
+                        {new Date(msg.at).toLocaleString()}
+                      </p>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Type a message..."
+                  value={adminMessage}
+                  onChange={(e) => setAdminMessage(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && sendAdminMessage()}
+                  className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                />
+                <button
+                  onClick={sendAdminMessage}
+                  className="bg-blue-900 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                >
+                  Send
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

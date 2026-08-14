@@ -4,6 +4,7 @@ import { getDocs, addDoc, collection, deleteDoc, updateDoc, doc, query, where } 
 
 const useUserStore = create((set) => ({
     users: [],
+    profiles: [],
 
     fetchUser: async () => {
         const snapShot = await getDocs(collection(db, "users"));
@@ -32,6 +33,14 @@ const useUserStore = create((set) => ({
             .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
             .filter((doc) => !doc.uid);
         set({ users: userData })
+    },
+
+    fetchProfiles: async () => {
+        const snapShot = await getDocs(collection(db, "users"));
+        const profiles = snapShot.docs
+            .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
+            .filter((doc) => doc.uid);
+        set({ profiles: profiles })
     },
 
     addNewUser: async (user) => {

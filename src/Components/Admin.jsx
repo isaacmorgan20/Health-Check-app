@@ -12,6 +12,9 @@ const Admin = () => {
   const updateUser = useUserStore((state) => state.updateUser);
   const deleteUser = useUserStore((state) => state.deleteUser);
 
+  const profiles = useUserStore((state) => state.profiles);
+  const fetchProfiles = useUserStore((state) => state.fetchProfiles);
+
   const packages = usePackageStore((state) => state.packages);
   const fetchPackages = usePackageStore((state) => state.fetchPackages);
   const seedPackages = usePackageStore((state) => state.seedPackages);
@@ -26,7 +29,8 @@ const Admin = () => {
   useEffect(() => {
     fetchAppointments();
     fetchPackages();
-  }, [fetchAppointments, fetchPackages]);
+    fetchProfiles();
+  }, [fetchAppointments, fetchPackages, fetchProfiles]);
 
   const total = appointments.length;
   const pending = appointments.filter(
@@ -144,6 +148,13 @@ const Admin = () => {
             onClick={() => setActiveTab("packages")}
           >
             Packages
+          </li>
+
+          <li
+            className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "users" ? "bg-blue-700" : "hover:bg-blue-800"}`}
+            onClick={() => setActiveTab("users")}
+          >
+            Users
           </li>
         </ul>
       </div>
@@ -433,6 +444,42 @@ const Admin = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Users */}
+        {activeTab === "users" && (
+          <div>
+            <h2 className="text-2xl font-bold mb-4">Registered Users</h2>
+
+            {profiles.length === 0 ? (
+              <p className="text-gray-500 bg-white p-6 rounded shadow">
+                No registered users yet.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full bg-white shadow rounded overflow-hidden">
+                  <thead className="bg-gray-200">
+                    <tr>
+                      <th className="p-3 text-left">Name</th>
+                      <th className="p-3 text-left">Email</th>
+                      <th className="p-3 text-left">Joined</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {profiles.map((p) => (
+                      <tr key={p.id} className="border-t">
+                        <td className="p-3 font-medium">{p.name || "-"}</td>
+                        <td className="p-3">{p.email || "-"}</td>
+                        <td className="p-3 text-sm text-gray-600">
+                          {p.createdAt ? new Date(p.createdAt).toLocaleDateString() : "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </div>

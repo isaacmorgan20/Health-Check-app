@@ -1,9 +1,17 @@
-import React from 'react'
-import packages from '../Data/health'
+import React, { useEffect } from 'react'
+import usePackageStore from '../Context/packageStore'
 import { useNavigate } from 'react-router-dom'
 
 const HealthPack = () => {
   const navigate = useNavigate()
+  const packages = usePackageStore((state) => state.packages)
+  const fetchPackages = usePackageStore((state) => state.fetchPackages)
+
+  useEffect(() => {
+    fetchPackages()
+  }, [fetchPackages])
+
+  const visible = packages.filter((p) => !p.disabled)
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white py-20 px-6">
@@ -22,7 +30,7 @@ const HealthPack = () => {
       {/* Grid */}
       <div className="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
 
-        {packages.map((item) => (
+        {visible.map((item) => (
           <div
             key={item.id}
             className="bg-white rounded-2xl shadow-md hover:shadow-2xl transition duration-300 overflow-hidden border border-gray-100"

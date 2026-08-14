@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import useUserStore from '../Context/UserStore'
 import useAgentStore from '../Context/agentStore'
 import useAuthStore from '../Context/authStore'
-import packs from '../Data/pack'
+import usePackageStore from '../Context/packageStore'
 import promos from '../Data/promos'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
@@ -20,12 +20,19 @@ const Book = () => {
   const updateUser = useUserStore((state) => state.updateUser)
   const authUser = useAuthStore((state) => state.user)
 
+  const packages = usePackageStore((state) => state.packages)
+  const fetchPackages = usePackageStore((state) => state.fetchPackages)
+
+  useEffect(() => {
+    fetchPackages()
+  }, [fetchPackages])
+
   const bookingDraft = useAgentStore((state) => state.bookingDraft)
   const autoSubmit = useAgentStore((state) => state.autoSubmit)
   const clearBookingDraft = useAgentStore((state) => state.clearBookingDraft)
 
   const agentPackage = bookingDraft?.packageId
-    ? packs.find((p) => p.id === Number(bookingDraft.packageId))
+    ? packages.find((p) => String(p.seedId ?? p.id) === String(bookingDraft.packageId))
     : null
 
   const initialPackage = agentPackage || selectedPackage
@@ -43,7 +50,8 @@ const Book = () => {
 
   const submittedRef = useRef(false)
 
-  const selectedPkg = packs.find((p) => p.name === selected)
+  const selectable = packages.filter((p) => !p.disabled)
+  const selectedPkg = selectable.find((p) => p.name === selected)
   const price = selectedPkg?.price || 0
   const discount = promoApplied?.discount || 0
   const finalPrice = Math.round(price * (1 - discount / 100))
@@ -81,7 +89,7 @@ const Book = () => {
   }
 
   const saveAppointment = useCallback(async (fields) => {
-    const pkg = packs.find((p) => p.name === fields.package) || null
+    const pkg = packages.find((p) => p.name === fields.package && !p.disabled) || null
     const pkgPrice = pkg?.price || 0
     const discountPct = promoApplied?.discount || 0
     const appointment = {
@@ -107,7 +115,7 @@ const Book = () => {
       alert(error.message)
       return null
     }
-  }, [addNewUser, authUser, promoApplied, paymentMethod])
+  }, [addNewUser, authUser, promoApplied, paymentMethod, packages])
 
   const openPaystack = (appointment, amount, docId) => {
     if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {
@@ -302,7 +310,7 @@ const Book = () => {
                 </option>
               )}
 
-              {packs.map((item) => (
+              {selectable.map((item) => (
                 <option key={item.id} value={item.name}>
                   {item.name} - GHS {item.price}
                 </option>

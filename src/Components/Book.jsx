@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import useUserStore from '../Context/UserStore'
 import useAgentStore from '../Context/agentStore'
+import useAuthStore from '../Context/authStore'
 import {
   Navigate, useLocation, //useNavigate 
 
@@ -12,6 +13,7 @@ const Book = () => {
   const location = useLocation()
   const selectedPackage = location.state?.selectedPackage
   const addNewUser = useUserStore((state) => state.addNewUser)
+  const authUser = useAuthStore((state) => state.user)
 
   const bookingDraft = useAgentStore((state) => state.bookingDraft)
   const autoSubmit = useAgentStore((state) => state.autoSubmit)
@@ -34,7 +36,7 @@ const Book = () => {
   const submittedRef = useRef(false)
 
   const saveAppointment = useCallback((user) => {
-    addNewUser(user)
+    addNewUser({ ...user, uid: authUser?.uid })
 
     setName("")
     setContact("")
@@ -42,7 +44,7 @@ const Book = () => {
     setDate("")
     setTime("")
     setNotes("")
-  }, [addNewUser])
+  }, [addNewUser, authUser])
 
   const handleSubmit = (e) => {
     e.preventDefault()

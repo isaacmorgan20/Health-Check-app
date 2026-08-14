@@ -3,12 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { MessageSquare, X, Send, Bot, Sparkles, AlertCircle } from "lucide-react";
 import useChatStore from "../Context/chatStore";
 import useAgentStore from "../Context/agentStore";
+import useAuthStore from "../Context/authStore";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
 const Chatbot = () => {
   const { isOpen, setIsOpen, toggleChat } = useChatStore();
   const setBookingDraft = useAgentStore((state) => state.setBookingDraft);
+  const authUser = useAuthStore((state) => state.user);
+  const authProfile = useAuthStore((state) => state.profile);
   const navigate = useNavigate();
   const [messages, setMessages] = useState([
     {
@@ -91,6 +94,13 @@ const Chatbot = () => {
             role: msg.role,
             content: msg.content,
           })),
+          context: {
+            user: {
+              uid: authUser?.uid || null,
+              name: authProfile?.name || null,
+              email: authProfile?.email || authUser?.email || null,
+            },
+          },
         }),
       });
 

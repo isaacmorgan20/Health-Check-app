@@ -1,13 +1,15 @@
 import React, { useEffect } from 'react'
 import useUserStore from '../Context/UserStore'
+import useAuthStore from '../Context/authStore'
 
 const MyAppoint = () => {
   const users = useUserStore((state) => state.users)
-  const fetchUser = useUserStore((state) => state.fetchUser)
+  const fetchUserByUid = useUserStore((state) => state.fetchUserByUid)
+  const currentUser = useAuthStore((state) => state.user)
 
   useEffect(() => {
-    fetchUser()
-  }, [fetchUser])
+    fetchUserByUid(currentUser?.uid)
+  }, [fetchUserByUid, currentUser])
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">

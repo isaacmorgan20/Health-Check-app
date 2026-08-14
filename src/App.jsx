@@ -89,11 +89,13 @@ import Chatbot from './Components/Chatbot'
 import Admin from './Components/Admin'
 
 import useAuthStore from './Context/authStore'
+import isAdmin from './Utils/admin'
 
 const App = () => {
   const user = useAuthStore((state) => state.user)
   const loading = useAuthStore((state) => state.loading)
   const ListenToAuth = useAuthStore((state) => state.ListenToAuth)
+  const admin = isAdmin(user?.email)
 
   useEffect(() => {
     const unsubscribe = ListenToAuth()
@@ -119,7 +121,7 @@ const App = () => {
             <Route path="/PackageDetails" element={<PackageDetails />} />
             <Route path="/MyAppointment" element={<MyAppointment />} />
             <Route path="/settings" element={<Settings />} />
-            <Route path="/admin" element={<Admin />} />
+            {admin && <Route path="/admin" element={<Admin />} />}
           </>
         )}
 

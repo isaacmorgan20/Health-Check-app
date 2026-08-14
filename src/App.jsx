@@ -81,6 +81,7 @@ import BookAppointment from './Pages/BookAppointment'
 import Packages from './Pages/Packages'
 import PackageDetails from './Pages/PackageDetails'
 import MyAppointment from './Pages/MyAppointment'
+import Settings from './Pages/Settings'
 import Login from './Pages/Login'
 import Register from './Pages/Register'
 import Home from './Pages/Home'
@@ -116,6 +117,7 @@ const App = () => {
             <Route path="/Packages" element={<Packages />} />
             <Route path="/PackageDetails" element={<PackageDetails />} />
             <Route path="/MyAppointment" element={<MyAppointment />} />
+            <Route path="/settings" element={<Settings />} />
           </>
         )}
 

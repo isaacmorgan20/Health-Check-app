@@ -2,11 +2,16 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import useAuthStore from "../Context/authStore";
 import logo from "../assets/Images/logo.png";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, Settings } from "lucide-react";
 
 const NavBar = () => {
   const user = useAuthStore((state) => state.user);
+  const Logout = useAuthStore((state) => state.Logout);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const handleLogout = async () => {
+    await Logout();
+  };
 
   return (
     <nav className="bg-gradient-to-r from-blue-950 to-blue-900 text-white shadow-md sticky top-0 z-50">
@@ -61,19 +66,41 @@ const NavBar = () => {
             My Appointment
           </Link>
 
+          <Link to="/settings" className="hover:text-green-400 transition">
+            Settings
+          </Link>
+
         </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-3">
 
           {user ? (
-            <div className="bg-blue-800 px-3 py-1 rounded-lg text-xs">
-              <p className="text-gray-300">Welcome</p>
+            <>
+              <div className="bg-blue-800 px-3 py-1 rounded-lg text-xs">
+                <p className="text-gray-300">Welcome</p>
 
-              <p className="font-semibold truncate max-w-[100px]">
-                {user.email}
-              </p>
-            </div>
+                <p className="font-semibold truncate max-w-[100px]">
+                  {user.email}
+                </p>
+              </div>
+
+              <Link
+                to="/settings"
+                className="bg-blue-800 hover:bg-blue-700 p-2 rounded-lg transition"
+                title="Settings"
+              >
+                <Settings size={18} />
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="bg-red-600 hover:bg-red-700 p-2 rounded-lg transition"
+                title="Logout"
+              >
+                <LogOut size={18} />
+              </button>
+            </>
           ) : (
             <Link to="/login">
               <button className="bg-green-500 hover:bg-green-600 px-4 py-2 rounded-lg text-sm font-semibold transition">
@@ -129,6 +156,26 @@ const NavBar = () => {
           >
             My Appointment
           </Link>
+
+          <Link
+            to="/settings"
+            onClick={() => setMenuOpen(false)}
+            className="hover:text-green-400 transition"
+          >
+            Settings
+          </Link>
+
+          {user && (
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                handleLogout();
+              }}
+              className="text-left text-red-400 hover:text-red-300 transition flex items-center gap-2"
+            >
+              <LogOut size={18} /> Logout
+            </button>
+          )}
 
         </div>
       )}

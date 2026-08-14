@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { auth, db } from "../Services/Firebase";
-import { doc, setDoc, getDoc } from "firebase/firestore";
+import { doc, setDoc, getDoc, updateDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 
 const useAuthStore = create((set) => ({
@@ -37,6 +37,17 @@ const useAuthStore = create((set) => ({
     Logout: async () => {
         await signOut(auth);
         set({ user: null, profile: null });
+    },
+
+    UpdateProfile: async ({ name }) => {
+        const currentUser = auth.currentUser;
+        if (!currentUser) return;
+
+        const data = { name };
+        await updateDoc(doc(db, "users", currentUser.uid), data);
+        set((state) => ({
+            profile: state.profile ? { ...state.profile, ...data } : data,
+        }));
     },
 
     ListenToAuth: () => {

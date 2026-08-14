@@ -265,6 +265,53 @@ const Admin = () => {
     alert("Clinic settings saved.");
   };
 
+  const toggleDay = (day) => {
+    setSettingsForm((f) => ({
+      ...f,
+      weeklyHours: { ...(f?.weeklyHours || {}), [day]: !(f?.weeklyHours || {})[day] },
+    }));
+  };
+
+  const updateSlot = (index, value) => {
+    setSettingsForm((f) => {
+      const timeSlots = [...(f?.timeSlots || [])];
+      timeSlots[index] = value;
+      return { ...f, timeSlots };
+    });
+  };
+
+  const addSlot = () => {
+    setSettingsForm((f) => ({
+      ...f,
+      timeSlots: [...(f?.timeSlots || []), "09:00"],
+    }));
+  };
+
+  const removeSlot = (index) => {
+    setSettingsForm((f) => ({
+      ...f,
+      timeSlots: (f?.timeSlots || []).filter((_, i) => i !== index),
+    }));
+  };
+
+  const [newBlockedDate, setNewBlockedDate] = useState("");
+
+  const addBlockedDate = () => {
+    if (!newBlockedDate) return;
+    setSettingsForm((f) => ({
+      ...f,
+      blockedDates: [...(f?.blockedDates || []), newBlockedDate],
+    }));
+    setNewBlockedDate("");
+  };
+
+  const removeBlockedDate = (date) => {
+    setSettingsForm((f) => ({
+      ...f,
+      blockedDates: (f?.blockedDates || []).filter((d) => d !== date),
+    }));
+  };
+
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Sidebar */}
@@ -868,6 +915,93 @@ const Admin = () => {
                     </button>
                   </div>
                 ))}
+              </div>
+
+              <div className="border-t border-gray-100 pt-4">
+                <h3 className="font-semibold text-blue-900 mb-3">Booking Schedule</h3>
+
+                <span className="text-sm font-medium text-gray-600 block mb-2">
+                  Days open for booking
+                </span>
+                <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 mb-4">
+                  {["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((day) => (
+                    <button
+                      key={day}
+                      onClick={() => toggleDay(day)}
+                      className={`p-2 rounded-lg text-sm font-semibold capitalize transition ${
+                        (settingsForm.weeklyHours || {})[day]
+                          ? "bg-green-600 text-white"
+                          : "bg-gray-200 text-gray-500"
+                      }`}
+                    >
+                      {day}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="text-sm font-medium text-gray-600 block mb-2">
+                  Time slots
+                </span>
+                <div className="flex flex-wrap gap-2 mb-2">
+                  {(settingsForm.timeSlots || []).map((slot, i) => (
+                    <div key={i} className="flex items-center gap-1">
+                      <input
+                        type="time"
+                        value={slot}
+                        onChange={(e) => updateSlot(i, e.target.value)}
+                        className="border border-gray-300 rounded-lg p-1.5 px-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                      />
+                      <button
+                        onClick={() => removeSlot(i)}
+                        className="text-red-500 hover:text-red-700 text-lg leading-none"
+                      >
+                        &times;
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addSlot}
+                    className="text-sm text-blue-700 font-semibold hover:underline"
+                  >
+                    + Add slot
+                  </button>
+                </div>
+
+                <span className="text-sm font-medium text-gray-600 block mb-2">
+                  Blocked dates (holidays / fully booked)
+                </span>
+                <div className="flex gap-2 mb-2">
+                  <input
+                    type="date"
+                    value={newBlockedDate}
+                    onChange={(e) => setNewBlockedDate(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-lg p-2 px-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                  <button
+                    onClick={addBlockedDate}
+                    className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
+                  >
+                    Block
+                  </button>
+                </div>
+                {(settingsForm.blockedDates || []).length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {(settingsForm.blockedDates || []).map((d) => (
+                      <span
+                        key={d}
+                        className="inline-flex items-center gap-2 bg-red-50 text-red-700 text-sm px-3 py-1 rounded-full"
+                      >
+                        {d}
+                        <button
+                          onClick={() => removeBlockedDate(d)}
+                          className="hover:text-red-900 font-bold"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <button

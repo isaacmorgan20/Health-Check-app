@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useUserStore from '../Context/UserStore'
 import useAgentStore from '../Context/agentStore'
 import useAuthStore from '../Context/authStore'
 import usePackageStore from '../Context/packageStore'
+import useClinicStore from '../Context/clinicStore'
 import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
 
@@ -12,6 +13,29 @@ const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
 
 const makeReference = () =>
   "HC-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8)
+
+const stamp = () => Date.now()
+
+const DAY_KEYS = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"]
+
+const toDateKey = (d) => {
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, "0")
+  const day = String(d.getDate()).padStart(2, "0")
+  return `${y}-${m}-${day}`
+}
+
+const formatDateLabel = (key) => {
+  const d = new Date(key + "T00:00:00")
+  return d.toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short" })
+}
+
+const formatTimeLabel = (slot) => {
+  const [h, m] = slot.split(":").map(Number)
+  const ampm = h >= 12 ? "PM" : "AM"
+  const hh = h % 12 === 0 ? 12 : h % 12
+  return `${hh}:${String(m).padStart(2, "0")} ${ampm}`
+}
 
 const Book = () => {
   const location = useLocation()
@@ -24,9 +48,33 @@ const Book = () => {
   const packages = usePackageStore((state) => state.packages)
   const fetchPackages = usePackageStore((state) => state.fetchPackages)
 
+  const clinicSettings = useClinicStore((state) => state.settings)
+  const listenToSettings = useClinicStore((state) => state.listenToSettings)
+
   useEffect(() => {
     fetchPackages()
-  }, [fetchPackages])
+    const unsubSettings = listenToSettings()
+    return () => unsubSettings && unsubSettings()
+  }, [fetchPackages, listenToSettings])
+
+  const timeSlots = clinicSettings.timeSlots || []
+  const weeklyHours = clinicSettings.weeklyHours || {}
+  const blockedDates = clinicSettings.blockedDates || []
+
+  const availableDates = []
+  {
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    for (let i = 0; i < 90; i++) {
+      const d = new Date(today)
+      d.setDate(today.getDate() + i)
+      const key = toDateKey(d)
+      const dayKey = DAY_KEYS[d.getDay()]
+      if (blockedDates.includes(key)) continue
+      if (!weeklyHours[dayKey]) continue
+      availableDates.push(key)
+    }
+  }
 
   const bookingDraft = useAgentStore((state) => state.bookingDraft)
   const autoSubmit = useAgentStore((state) => state.autoSubmit)
@@ -48,6 +96,9 @@ const Book = () => {
   const [paymentMethod, setPaymentMethod] = useState("clinic")
   const [promoCode, setPromoCode] = useState("")
   const [promoApplied, setPromoApplied] = useState(null)
+
+  const effectiveDate = availableDates.includes(date) ? date : (availableDates[0] || "")
+  const effectiveTime = timeSlots.includes(time) ? time : (timeSlots[0] || "")
 
   const submittedRef = useRef(false)
 
@@ -89,7 +140,7 @@ const Book = () => {
     setPaymentMethod("clinic")
   }
 
-  const saveAppointment = useCallback(async (fields) => {
+  const saveAppointment = async (fields) => {
     const pkg = packages.find((p) => p.name === fields.package && !p.disabled) || null
     const pkgPrice = pkg?.price || 0
     const discountPct = promoApplied?.discount || 0
@@ -106,7 +157,7 @@ const Book = () => {
       userUid: authUser?.uid,
       paymentStatus: paymentMethod === "online" ? "unpaid" : "clinic",
       ...(promoApplied ? { promoCode: promoApplied.code, discountPct } : {}),
-      createdAt: Date.now(),
+      createdAt: stamp(),
     }
     try {
       const docId = await addNewUser(appointment)
@@ -116,7 +167,7 @@ const Book = () => {
       alert(error.message)
       return null
     }
-  }, [addNewUser, authUser, promoApplied, paymentMethod, packages])
+  }
 
   const openPaystack = (appointment, amount, docId) => {
     if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {
@@ -139,7 +190,7 @@ const Book = () => {
         await updateUser(docId, {
           paymentStatus: "paid",
           paymentReference: response.reference,
-          paidAt: Date.now(),
+          paidAt: stamp(),
         })
         notifyBooking(appointment, response.reference)
         alert("Payment successful! Your appointment is confirmed.")
@@ -157,7 +208,9 @@ const Book = () => {
     e.preventDefault()
 
     const appointment = {
-      name, contact, email, date, time,
+      name, contact, email,
+      date: effectiveDate,
+      time: effectiveTime,
       notes: notes || "Booked via Herbal Center",
       package: selected,
     }
@@ -192,13 +245,15 @@ const Book = () => {
   // Auto-submit when the AI agent has all the required details
   useEffect(() => {
     if (!autoSubmit || submittedRef.current) return
-    if (!name || !contact || !date || !time) return
+    if (!name || !contact || !effectiveDate || !effectiveTime) return
 
     submittedRef.current = true
 
     const timer = setTimeout(async () => {
       const fields = {
-        name, contact, email, date, time,
+        name, contact, email,
+        date: effectiveDate,
+        time: effectiveTime,
         notes: notes || "Booked via HealthAssist AI",
         package: initialPackage?.name,
       }
@@ -209,7 +264,7 @@ const Book = () => {
     }, 0)
 
     return () => clearTimeout(timer)
-  }, [autoSubmit, name, contact, email, date, time, notes, initialPackage, clearBookingDraft, saveAppointment, navigate])
+  }, [autoSubmit, name, contact, email, effectiveDate, effectiveTime, notes, initialPackage, clearBookingDraft, saveAppointment, navigate])
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">
@@ -340,24 +395,46 @@ const Book = () => {
 
             <div>
               <label className="text-sm font-medium text-gray-700">Date</label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                required
-                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+              {availableDates.length === 0 ? (
+                <p className="mt-1 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-3">
+                  No dates available right now. Please check back later.
+                </p>
+              ) : (
+                <select
+                  value={effectiveDate}
+                  onChange={(e) => { setDate(e.target.value); setTime("") }}
+                  required
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {availableDates.map((key) => (
+                    <option key={key} value={key}>
+                      {formatDateLabel(key)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
             <div>
               <label className="text-sm font-medium text-gray-700">Time</label>
-              <input
-                type="time"
-                value={time}
-                onChange={(e) => setTime(e.target.value)}
-                required
-                className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-              />
+              {timeSlots.length === 0 ? (
+                <p className="mt-1 text-sm text-red-500 bg-red-50 border border-red-200 rounded-lg p-3">
+                  No time slots available right now. Please check back later.
+                </p>
+              ) : (
+                <select
+                  value={effectiveTime}
+                  onChange={(e) => setTime(e.target.value)}
+                  required
+                  className="mt-1 w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                >
+                  {timeSlots.map((slot) => (
+                    <option key={slot} value={slot}>
+                      {formatTimeLabel(slot)}
+                    </option>
+                  ))}
+                </select>
+              )}
             </div>
 
           </div>

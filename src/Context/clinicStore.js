@@ -13,6 +13,17 @@ const DEFAULTS = {
     { day: "Sunday", time: "Closed" },
   ],
   about: "We are a holistic health center offering natural and homeopathic care.",
+  timeSlots: ["09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00"],
+  weeklyHours: {
+    mon: true,
+    tue: true,
+    wed: true,
+    thu: true,
+    fri: true,
+    sat: true,
+    sun: false,
+  },
+  blockedDates: [],
 };
 
 const useClinicStore = create((set) => ({

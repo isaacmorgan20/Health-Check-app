@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { db } from "../Services/Firebase";
-import { getDocs, addDoc, collection, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { getDocs, addDoc, collection, updateDoc, deleteDoc, doc, onSnapshot } from "firebase/firestore";
 import seedPacks from "../Data/pack";
 
 const usePackageStore = create((set) => ({
@@ -28,6 +28,18 @@ const usePackageStore = create((set) => ({
             await addDoc(collection(db, "packages"), p);
         }
         await usePackageStore.getState().fetchPackages();
+    },
+
+    listenToPackages: () => {
+        const unsubscribe = onSnapshot(collection(db, "packages"), (snap) => {
+            const data = snap.docs.map((d) => {
+                const dd = d.data();
+                return { id: d.id, ...dd, seedId: dd.id ?? null };
+            });
+            const list = data.length ? data : seedPacks.map((p) => ({ ...p, seedId: p.id }));
+            set({ packages: list, loading: false });
+        });
+        return unsubscribe;
     },
 
     addPackage: async (pkg) => {

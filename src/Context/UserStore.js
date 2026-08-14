@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { db } from "../Services/Firebase";
-import { getDocs, addDoc, collection, deleteDoc, updateDoc, doc, query, where } from "firebase/firestore";
+import { getDocs, addDoc, collection, deleteDoc, updateDoc, doc, query, where, onSnapshot } from "firebase/firestore";
 
 const useUserStore = create((set) => ({
     users: [],
@@ -41,6 +41,19 @@ const useUserStore = create((set) => ({
             .map((docSnap) => ({ id: docSnap.id, ...docSnap.data() }))
             .filter((doc) => doc.uid);
         set({ profiles: profiles })
+    },
+
+    listenToUsers: () => {
+        const unsubscribe = onSnapshot(collection(db, "users"), (snapShot) => {
+            const all = snapShot.docs.map((docSnap) => ({
+                id: docSnap.id, ...docSnap.data()
+            }));
+            set({
+                users: all.filter((doc) => !doc.uid),
+                profiles: all.filter((doc) => doc.uid),
+            });
+        });
+        return unsubscribe;
     },
 
     addNewUser: async (user) => {

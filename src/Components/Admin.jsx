@@ -8,15 +8,14 @@ const Admin = () => {
   const [statusFilter, setStatusFilter] = useState("All");
 
   const appointments = useUserStore((state) => state.users);
-  const fetchAppointments = useUserStore((state) => state.fetchAppointments);
+  const listenToUsers = useUserStore((state) => state.listenToUsers);
   const updateUser = useUserStore((state) => state.updateUser);
   const deleteUser = useUserStore((state) => state.deleteUser);
 
   const profiles = useUserStore((state) => state.profiles);
-  const fetchProfiles = useUserStore((state) => state.fetchProfiles);
 
   const packages = usePackageStore((state) => state.packages);
-  const fetchPackages = usePackageStore((state) => state.fetchPackages);
+  const listenToPackages = usePackageStore((state) => state.listenToPackages);
   const seedPackages = usePackageStore((state) => state.seedPackages);
   const addPackage = usePackageStore((state) => state.addPackage);
   const updatePackage = usePackageStore((state) => state.updatePackage);
@@ -27,10 +26,13 @@ const Admin = () => {
   const [showAddForm, setShowAddForm] = useState(false);
 
   useEffect(() => {
-    fetchAppointments();
-    fetchPackages();
-    fetchProfiles();
-  }, [fetchAppointments, fetchPackages, fetchProfiles]);
+    const unsubUsers = listenToUsers();
+    const unsubPackages = listenToPackages();
+    return () => {
+      unsubUsers();
+      unsubPackages();
+    };
+  }, [listenToUsers, listenToPackages]);
 
   const total = appointments.length;
   const pending = appointments.filter(
@@ -296,7 +298,6 @@ const Admin = () => {
                 <button
                   onClick={async () => {
                     await seedPackages();
-                    fetchPackages();
                   }}
                   className="bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg text-sm font-semibold transition"
                 >

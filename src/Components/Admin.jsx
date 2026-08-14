@@ -266,12 +266,12 @@ const Admin = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row h-screen bg-gray-100">
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className="w-full md:w-64 bg-blue-900 text-white p-5">
-        <h1 className="text-2xl font-bold mb-8">Health Admin</h1>
+      <div className="w-full md:w-64 bg-blue-900 text-white p-4 md:p-5">
+        <h1 className="text-xl md:text-2xl font-bold mb-6 md:mb-8">Health Admin</h1>
 
-        <ul className="flex md:flex-col gap-3 md:space-y-3 overflow-x-auto pb-2 md:pb-0">
+        <ul className="flex md:flex-col gap-3 md:space-y-3 overflow-x-auto pb-2 md:pb-0 md:overflow-visible">
           <li
             className={`p-2 rounded cursor-pointer whitespace-nowrap ${activeTab === "dashboard" ? "bg-blue-700" : "hover:bg-blue-800"}`}
             onClick={() => setActiveTab("dashboard")}
@@ -324,7 +324,7 @@ const Admin = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 p-6 overflow-auto">
+      <div className="flex-1 p-4 md:p-6 overflow-auto">
 
         {/* Dashboard */}
         {activeTab === "dashboard" && (
@@ -407,9 +407,9 @@ const Admin = () => {
                       <th className="p-3 text-left">Name</th>
                       <th className="p-3 text-left">Package</th>
                       <th className="p-3 text-left">Date</th>
-                      <th className="p-3 text-left">Time</th>
-                      <th className="p-3 text-left">Price</th>
-                      <th className="p-3 text-left">Payment</th>
+                      <th className="p-3 text-left hidden md:table-cell">Time</th>
+                      <th className="p-3 text-left hidden lg:table-cell">Price</th>
+                      <th className="p-3 text-left hidden lg:table-cell">Payment</th>
                       <th className="p-3 text-left">Status</th>
                       <th className="p-3 text-left">Action</th>
                     </tr>
@@ -420,9 +420,9 @@ const Admin = () => {
                         <td className="p-3">{a.name}</td>
                         <td className="p-3">{a.package || "-"}</td>
                         <td className="p-3">{a.date || "-"}</td>
-                        <td className="p-3">{a.time || "-"}</td>
-                        <td className="p-3">GHC {a.price || 0}</td>
-                        <td className="p-3">
+                        <td className="p-3 hidden md:table-cell">{a.time || "-"}</td>
+                        <td className="p-3 hidden lg:table-cell">GHC {a.price || 0}</td>
+                        <td className="p-3 hidden lg:table-cell">
                           <span className={`px-2 py-1 rounded text-white text-sm ${a.paymentStatus === "paid" ? "bg-green-600" : a.paymentStatus === "unpaid" ? "bg-red-500" : "bg-yellow-500"}`}>
                             {a.paymentStatus === "clinic" ? "Clinic" : (a.paymentStatus || "N/A")}
                           </span>
@@ -440,7 +440,7 @@ const Admin = () => {
                           </select>
                         </td>
                         <td className="p-3">
-                          <div className="flex gap-2">
+                          <div className="flex gap-2 flex-wrap">
                             <button
                               onClick={() => openMessage(a)}
                               className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"
@@ -469,7 +469,7 @@ const Admin = () => {
           <div>
             <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
               <h2 className="text-2xl font-bold">Manage Packages</h2>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 <button
                   onClick={async () => {
                     await seedPackages();
@@ -525,7 +525,7 @@ const Admin = () => {
                 <thead className="bg-gray-200">
                   <tr>
                     <th className="p-3 text-left">Name</th>
-                    <th className="p-3 text-left">Description</th>
+                    <th className="p-3 text-left hidden md:table-cell">Description</th>
                     <th className="p-3 text-left">Price</th>
                     <th className="p-3 text-left">Status</th>
                     <th className="p-3 text-left">Actions</th>
@@ -535,7 +535,7 @@ const Admin = () => {
                   {packages.map((pkg) => (
                     <tr key={pkg.id} className={`border-t ${pkg.disabled ? "opacity-50" : ""}`}>
                       <td className="p-3">{pkg.name}</td>
-                      <td className="p-3 text-sm text-gray-600">{pkg.description || "-"}</td>
+                      <td className="p-3 text-sm text-gray-600 hidden md:table-cell">{pkg.description || "-"}</td>
                       <td className="p-3">GHS {pkg.price}</td>
                       <td className="p-3">
                         <span className={`px-2 py-1 rounded text-white text-sm ${pkg.disabled ? "bg-gray-500" : "bg-green-600"}`}>
@@ -543,7 +543,7 @@ const Admin = () => {
                         </span>
                       </td>
                       <td className="p-3">
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <button
                             onClick={() => setEditingPkg(pkg)}
                             className="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded text-sm transition"

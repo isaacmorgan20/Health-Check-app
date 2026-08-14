@@ -2,16 +2,11 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import useAuthStore from "../Context/authStore";
 import logo from "../assets/Images/logo.png";
-import { Menu, X, LogOut, Settings } from "lucide-react";
+import { Menu, X, Settings } from "lucide-react";
 
 const NavBar = () => {
   const user = useAuthStore((state) => state.user);
-  const Logout = useAuthStore((state) => state.Logout);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    await Logout();
-  };
 
   return (
     <nav className="bg-gradient-to-r from-blue-950 to-blue-900 text-white shadow-md sticky top-0 z-50">
@@ -92,14 +87,6 @@ const NavBar = () => {
               >
                 <Settings size={18} />
               </Link>
-
-              <button
-                onClick={handleLogout}
-                className="bg-red-600 hover:bg-red-700 p-2 rounded-lg transition"
-                title="Logout"
-              >
-                <LogOut size={18} />
-              </button>
             </>
           ) : (
             <Link to="/login">
@@ -164,18 +151,6 @@ const NavBar = () => {
           >
             Settings
           </Link>
-
-          {user && (
-            <button
-              onClick={() => {
-                setMenuOpen(false);
-                handleLogout();
-              }}
-              className="text-left text-red-400 hover:text-red-300 transition flex items-center gap-2"
-            >
-              <LogOut size={18} /> Logout
-            </button>
-          )}
 
         </div>
       )}

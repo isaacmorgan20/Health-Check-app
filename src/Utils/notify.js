@@ -1,5 +1,19 @@
 const BACKEND = import.meta.env.VITE_BACKEND_URL || "https://backen-1-j6ms.onrender.com";
 
+export const verifyPayment = async (reference) => {
+  try {
+    const res = await fetch(`${BACKEND}/verify-payment`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ reference }),
+    });
+    return await res.json();
+  } catch (error) {
+    console.warn("Verification skipped:", error.message);
+    return { verified: null };
+  }
+};
+
 export const notifyClient = async (appointment, { subject, body }) => {
   try {
     await fetch(`${BACKEND}/notify-booking`, {

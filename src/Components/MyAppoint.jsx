@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import useUserStore from '../Context/UserStore'
 import useAuthStore from '../Context/authStore'
+import { verifyPayment } from '../Utils/notify'
 
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
 
@@ -30,6 +31,11 @@ const MyAppoint = () => {
       currency: "GHS",
       ref: makeReference(),
       callback: async (response) => {
+        const result = await verifyPayment(response.reference)
+        if (result.verified === false) {
+          alert("Payment could not be verified yet. Please contact the clinic.")
+          return
+        }
         await updateUser(user.id, {
           paymentStatus: "paid",
           paymentReference: response.reference,

@@ -5,6 +5,7 @@ import useAgentStore from '../Context/agentStore'
 import useAuthStore from '../Context/authStore'
 import usePackageStore from '../Context/packageStore'
 import promos from '../Data/promos'
+import { verifyPayment } from '../Utils/notify'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
@@ -129,6 +130,12 @@ const Book = () => {
       currency: "GHS",
       ref: makeReference(),
       callback: async (response) => {
+        const result = await verifyPayment(response.reference)
+        if (result.verified === false) {
+          alert("Payment could not be verified yet. Your appointment is saved — we will confirm shortly.")
+          navigate("/MyAppointment")
+          return
+        }
         await updateUser(docId, {
           paymentStatus: "paid",
           paymentReference: response.reference,

@@ -1,14 +1,13 @@
-import React, { useState, useEffect, useRef } from "react"
-import { useNavigate, useLocation } from "react-router-dom"
+import React, { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import useAuthStore from "../Context/authStore"
 import useUserStore from "../Context/UserStore"
 import useToast from "../Components/UIToast"
 
 const Profile = () => {
   const navigate = useNavigate()
-  const location = useLocation()
-  const { user, profile } = useAuthStore((state) => state)
-  const { profiles, fetchProfiles, updateUser, deleteUser } = useUserStore()
+  const { user } = useAuthStore((state) => state)
+  const { profiles, updateUser, deleteUser } = useUserStore()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [showImageUpload, setShowImageUpload] = useState(false)
   const [imageUrl, setImageUrl] = useState("")
@@ -24,11 +23,13 @@ const Profile = () => {
     if (user) {
       const getProfile = profiles.find((p) => p.uid === user.uid)
       if (getProfile) {
-        setName(getProfile.name || "")
-        setBirthdate(getProfile.birthdate || "")
-        setLocationPref(getProfile.location || "")
-        setHealthGoals(getProfile.healthGoals || "")
-        setImageUrl(getProfile.imageUrl || "")
+        Promise.resolve().then(() => {
+          setName(getProfile.name || "")
+          setBirthdate(getProfile.birthdate || "")
+          setLocationPref(getProfile.location || "")
+          setHealthGoals(getProfile.healthGoals || "")
+          setImageUrl(getProfile.imageUrl || "")
+        })
       }
     }
   }, [user, profiles])

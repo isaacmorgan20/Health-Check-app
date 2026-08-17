@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import useUserStore from "../Context/UserStore";
 import usePackageStore from "../Context/packageStore";
 import useClinicStore from "../Context/clinicStore";
+import useAuthStore from "../Context/authStore";
 import { notifyClient } from "../Utils/notify";
 
 const toDateKey = (d) => {
@@ -45,6 +46,9 @@ const Admin = () => {
   const saveSettings = useClinicStore((state) => state.saveSettings);
   const [settingsForm, setSettingsForm] = useState(null);
 
+  const authUser = useAuthStore((state) => state.user);
+  const getToken = async () => authUser?.getIdToken ? await authUser.getIdToken() : null;
+
   useEffect(() => {
     const unsubUsers = listenToUsers();
     const unsubPackages = listenToPackages();
@@ -78,8 +82,7 @@ const Admin = () => {
 
   const changeStatus = async (appointment, status) => {
     await updateUser(appointment.id, { status });
-    const authUser = useAuthStore((state) => state.user)
-    const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+    const token = await getToken();
     notifyClient(appointment, {
       subject: `Your appointment is ${status}`,
       body: `Hello ${appointment.name},\n\nYour appointment for ${
@@ -113,8 +116,7 @@ const Admin = () => {
       ],
     });
     setAdminMessage("");
-    const authUser = useAuthStore((state) => state.user)
-    const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+    const token = await getToken();
     notifyClient(liveTarget, {
       subject: "New message from the clinic",
       body: `Hello ${liveTarget.name},\n\nYou have a new message from the clinic:\n\n"${text}"\n\nReply anytime on your Messages page.\nHerbal Homeopathic Center`,

@@ -15,14 +15,12 @@ import Admin from './Components/Admin'
 import Profile from './Components/Profile'
 import useAuthStore from './Context/authStore'
 import isAdmin from './Utils/admin'
-import { useState } from 'react'
 
 const App = () => {
   const user = useAuthStore((state) => state.user)
   const loading = useAuthStore((state) => state.loading)
   const ListenToAuth = useAuthStore((state) => state.ListenToAuth)
   const admin = isAdmin(user?.email)
-  const [language, setLanguage] = useState('en')
 
   useEffect(() => {
     const unsubscribe = ListenToAuth()

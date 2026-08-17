@@ -1,5 +1,4 @@
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import {
   LogOut,
   User,
@@ -19,7 +18,6 @@ const SettingsContent = () => {
   const profile = useAuthStore((state) => state.profile)
   const Logout = useAuthStore((state) => state.Logout)
   const UpdateProfile = useAuthStore((state) => state.UpdateProfile)
-  const navigate = useNavigate()
 
   const [name, setName] = useState(profile?.name || '')
   const [saving, setSaving] = useState(false)
@@ -41,14 +39,9 @@ const SettingsContent = () => {
     try {
       await UpdateProfile({ name: "", email: "", birthdate: "", location: "", healthGoals: "" })
       setShowDeleteConfirm(false)
-    } catch (err) {
+    } catch {
       // Handle deletion
     }
-  }
-
-  const handleLogout = async () => {
-    await Logout()
-    navigate('/login')
   }
 
   return (

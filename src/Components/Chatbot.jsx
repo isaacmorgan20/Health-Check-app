@@ -7,8 +7,6 @@ import useAuthStore from "../Context/authStore";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
-let pendingTokenRefresh = null;
-
 const Chatbot = () => {
   const { isOpen, setIsOpen, toggleChat } = useChatStore();
   const setBookingDraft = useAgentStore((state) => state.setBookingDraft);
@@ -86,7 +84,7 @@ const suggestions = [
       setInput("");
     }
 
-    const user = useAuthStore((state) => state.user);
+    const user = authUser;
     const token = user?.getIdToken ? await user.getIdToken() : null;
 
     const userMessage = { role: "user", content: text };

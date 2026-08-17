@@ -7,7 +7,7 @@ import usePackageStore from '../Context/packageStore'
 import useClinicStore from '../Context/clinicStore'
 import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
-import { Check, Zap, Truck, UserPlus, Star, AlertCircle } from "lucide-react"
+import { Check, AlertCircle } from "lucide-react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
@@ -40,6 +40,7 @@ const Book = () => {
   const addNewUser = useUserStore((state) => state.addNewUser)
   const updateUser = useUserStore((state) => state.updateUser)
   const authUser = useAuthStore((state) => state.user)
+  const getToken = useCallback(async () => authUser?.getIdToken ? await authUser.getIdToken() : null, [authUser])
 
   const packages = usePackageStore((state) => state.packages)
   const fetchPackages = usePackageStore((state) => state.fetchPackages)
@@ -126,19 +127,10 @@ const Book = () => {
   const discount = promoApplied?.discount || 0
   const finalPrice = Math.round(price * (1 - discount / 100))
 
-  const pkgFeatureIcons = {
-    "Basic Checkup": <Check className="w-4 h-4 text-green-400" />,
-    "Full Body Scan": <Zap className="w-4 h-4 text-blue-400" />,
-    "Home Visit": <Truck className="w-4 h-4 text-yellow-400" />,
-    "Consultation": <UserPlus className="w-4 h-4 text-purple-400" />,
-    "Premium Package": <Star className="w-4 h-4 text-amber-500" />,
-  }
-
-  const notifyBooking = async (appointment, reference) => {
+  const notifyBooking = useCallback(async (appointment, reference) => {
     if (!appointment.email) return
     try {
-      const authUser = useAuthStore((state) => state.user)
-      const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+      const token = await getToken()
       const headers = {
         "Content-Type": "application/json",
       }
@@ -160,9 +152,9 @@ const Book = () => {
     } catch (error) {
       console.error("Notify failed:", error)
     }
-  }
+  }, [getToken])
 
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+// eslint-disable-next-line react-hooks/preserve-manual-memoization
 const resetFields = useCallback(() => {
     setName("")
     setContact("")
@@ -216,8 +208,7 @@ const resetFields = useCallback(() => {
       currency: "GHS",
       ref: makeReference(),
       callback: async (response) => {
-        const authUser = useAuthStore((state) => state.user)
-        const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+        const token = await getToken()
         const result = await verifyPayment(response.reference, token)
         if (result.verified === false) {
           alert("Payment could not be verified yet. Your appointment is saved — we will confirm shortly.")
@@ -304,7 +295,7 @@ const resetFields = useCallback(() => {
     }, 0)
 
     return () => clearTimeout(timer)
-  }, [autoSubmit, name, contact, email, effectiveDate, effectiveTime, notes, initialPackage, clearBookingDraft, saveAppointment, navigate])
+  }, [autoSubmit, name, contact, email, effectiveDate, effectiveTime, notes, initialPackage, clearBookingDraft, saveAppointment, notifyBooking, navigate])
 
   return (
     <section className="bg-gradient-to-b from-blue-50 to-white min-h-screen py-20 px-6">

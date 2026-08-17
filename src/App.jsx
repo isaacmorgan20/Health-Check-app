@@ -101,7 +101,7 @@ const App = () => {
   useEffect(() => {
     const unsubscribe = ListenToAuth()
     return () => unsubscribe && unsubscribe()
-  }, [])
+  }, [ListenToAuth])
 
   if (loading)  return <p className='text-center mt-70 font-bold text-2xl'>Loading...</p>
 

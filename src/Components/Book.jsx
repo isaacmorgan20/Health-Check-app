@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import useUserStore from '../Context/UserStore'
 import useAgentStore from '../Context/agentStore'
@@ -144,7 +144,8 @@ const Book = () => {
     }
   }
 
-  const resetFields = () => {
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
+const resetFields = useCallback(() => {
     setName("")
     setContact("")
     setEmail("")
@@ -154,9 +155,9 @@ const Book = () => {
     setPromoCode("")
     setPromoApplied(null)
     setPaymentMethod("clinic")
-  }
+  }, [])
 
-  const saveAppointment = async (fields) => {
+  const saveAppointment = useCallback(async (fields) => {
     const pkg = packages.find((p) => p.name === fields.package && !p.disabled) || null
     const pkgPrice = pkg?.price || 0
     const discountPct = promoApplied?.discount || 0
@@ -183,7 +184,7 @@ const Book = () => {
       alert(error.message)
       return null
     }
-  }
+  }, [packages, promoApplied, authUser, paymentMethod, addNewUser, resetFields])
 
   const openPaystack = (appointment, amount, docId) => {
     if (!PAYSTACK_PUBLIC_KEY || !window.PaystackPop) {

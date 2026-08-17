@@ -56,23 +56,18 @@ const App = () => {
         <Route path="/register" element={<Register />} />
 
         {/* Private Routes */}
-        {user && (
-          <>
-            <Route path="/" element={<Home />} />
-            <Route path="/BookAppointment" element={<BookAppointment />} />
-            <Route path="/Packages" element={<Packages />} />
-            <Route path="/PackageDetails" element={<PackageDetails />} />
-            <Route path="/MyAppointment" element={<MyAppointment />} />
-            <Route path="/messages" element={<Messages />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/profile" element={<Profile />} />
-            {admin && <Route path="/admin" element={<Admin />} />}
-          </>
-        )}
+        <Route path="/" element={user ? <Home /> : <Navigate to="/login" replace />} />
+        <Route path="/BookAppointment" element={user ? <BookAppointment /> : <Navigate to="/login" replace />} />
+        <Route path="/Packages" element={user ? <Packages /> : <Navigate to="/login" replace />} />
+        <Route path="/PackageDetails" element={user ? <PackageDetails /> : <Navigate to="/login" replace />} />
+        <Route path="/MyAppointment" element={user ? <MyAppointment /> : <Navigate to="/login" replace />} />
+        <Route path="/messages" element={user ? <Messages /> : <Navigate to="/login" replace />} />
+        <Route path="/settings" element={user ? <Settings /> : <Navigate to="/login" replace />} />
+        <Route path="/profile" element={user ? <Profile /> : <Navigate to="/login" replace />} />
+        <Route path="/admin" element={user && admin ? <Admin /> : <Navigate to="/" replace />} />
 
         {/* Redirect logic */}
-        {!user && <Route path="*" element={<Navigate to="/login" replace />} />}
-        {user && <Route path="*" element={<Navigate to="/" replace />} />}
+        <Route path="*" element={<Navigate to={user ? "/" : "/login"} replace />} />
 
       </Routes>
       {user && <Chatbot />}

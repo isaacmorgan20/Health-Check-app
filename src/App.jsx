@@ -74,7 +74,7 @@ import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import BookAppointment from './Pages/BookAppointment'
-import Packages from './Packages'
+import Packages from "./Pages/Packages"
 import PackageDetails from './PackageDetails'
 import MyAppointment from './MyAppointment'
 import Settings from './Pages/Settings'

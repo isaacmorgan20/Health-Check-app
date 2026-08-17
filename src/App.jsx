@@ -3,10 +3,10 @@
 // import React, { useEffect, useState } from 'react'
 // import { BrowserRouter, Route, Routes } from 'react-router-dom'
 // import BookAppointment from './Pages/BookAppointment'
-// import Packages from './Pages/Packages'
-// import PackageDetails from './Pages/PackageDetails'
-// import MyAppointment from './Pages/MyAppointment'
-// import Login from './Pages/Login'
+// import Packages from './Packages'
+// import PackageDetails from './PackageDetails'
+// import MyAppointment from './MyAppointment'
+// import Login from './Login'
 // import useAuthStore from './Context/authStore'
 // import Register from './Pages/Register'
 // import Home from './Pages/Home'
@@ -36,7 +36,7 @@
 
 //           <p>
 //             {showLogin ? "No account?" : "Already have an account?"}{" "}
-//             <button onClick={() => setShowLogin(!showLogin)}>
+//             <button onClick={() => setShowLogin(!showLogin)}}>
 //               {showLogin ? "Register" : "Login"}
 //             </button>
 //           </p>
@@ -55,12 +55,9 @@
 //               <Route path='/BookAppointment' element={<BookAppointment />} />
 //               <Route path='/PackageDetails' element={<PackageDetails />} />
 //               <Route path='/Packages' element={<Packages />} />
-//               <Route path='/PackageDetails' element={<PackageDetails />} />
 //               <Route path='/MyAppointment' element={<MyAppointment />} />
 //             </Routes>
 //           </BrowserRouter>
-
-
 
 //         </>
 //       )}
@@ -71,16 +68,15 @@
 // export default App
 
 
-
 // ============= CURRENT CODE ===============
 
 import React, { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 
 import BookAppointment from './Pages/BookAppointment'
-import Packages from './Pages/Packages'
-import PackageDetails from './Pages/PackageDetails'
-import MyAppointment from './Pages/MyAppointment'
+import Packages from './Packages'
+import PackageDetails from './PackageDetails'
+import MyAppointment from './MyAppointment'
 import Settings from './Pages/Settings'
 import Messages from './Pages/Messages'
 import Login from './Pages/Login'
@@ -147,7 +143,10 @@ const App = () => {
 
         {/* Redirect logic */}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
-        {user && <Route path="*" element={<Navigate to="/" />} />
+        {user && <React.Fragment>
+          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="*" element={<Navigate to="/" />} />
+        </React.Fragment>}
 
       </Routes>
     </BrowserRouter>

@@ -36,11 +36,6 @@ const SettingsContent = () => {
     setSaving(false)
   }
 
-  const handleLogout = async () => {
-    await Logout()
-    navigate('/login')
-  }
-
   const handleDelete = async () => {
     setShowDeleteConfirm(false)
     try {
@@ -208,8 +203,31 @@ const SettingsContent = () => {
           </div>
         </div>
 
-        {/* Account */}
-        <div className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Delete Account</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to permanently delete your account? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                >
+                  Delete Permanently
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </section>

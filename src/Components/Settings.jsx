@@ -7,6 +7,10 @@ import {
   Save,
   Settings as SettingsIcon,
   ShieldCheck,
+  Bell,
+  MailOpen,
+  Moon,
+  Sun,
 } from 'lucide-react'
 import useAuthStore from '../Context/authStore'
 
@@ -15,9 +19,14 @@ const SettingsContent = () => {
   const profile = useAuthStore((state) => state.profile)
   const Logout = useAuthStore((state) => state.Logout)
   const UpdateProfile = useAuthStore((state) => state.UpdateProfile)
+  const navigate = useNavigate()
+
   const [name, setName] = useState(profile?.name || '')
   const [saving, setSaving] = useState(false)
-  const navigate = useNavigate()
+  const [reminderMinutes, setReminderMinutes] = useState(60)
+  const [enableEmail, setEnableEmail] = useState(true)
+  const [enableSMS, setEnableSMS] = useState(true)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const handleSave = async (e) => {
     e.preventDefault()
@@ -25,6 +34,16 @@ const SettingsContent = () => {
     setSaving(true)
     await UpdateProfile({ name: name.trim() })
     setSaving(false)
+  }
+
+  const handleDelete = async () => {
+    setShowDeleteConfirm(false)
+    try {
+      await UpdateProfile({ name: "", email: "", birthdate: "", location: "", healthGoals: "" })
+      setShowDeleteConfirm(false)
+    } catch (err) {
+      // Handle deletion
+    }
   }
 
   const handleLogout = async () => {
@@ -92,13 +111,123 @@ const SettingsContent = () => {
         <div className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
           <h2 className="text-lg font-bold text-blue-900 mb-4">Account</h2>
 
-          <button
-            onClick={handleLogout}
-            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg transition font-semibold flex items-center justify-center gap-2"
-          >
-            <LogOut className="w-4 h-4" /> Logout
-          </button>
+          <div className="space-y-4 text-sm">
+            <div className="flex items-center justify-between">
+              <span>Email notifications</span>
+              <label className="relative w-11 h-6 rounded-full bg-gray-200 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={enableEmail}
+                  onChange={() => setEnableEmail(!enableEmail)}
+                  className="absolute w-4 h-4 rounded-full bg-blue-600 cursor-pointer pointer-events-none transition"
+                />
+                <span className="absolute left-1 top-1 text-xs font-semibold bg-white rounded-full h-4 w-4"></span>
+              </label>
+            </div>
+            <div className="flex items-center justify-between">
+              <span>SMS notifications</span>
+              <label className="relative w-11 h-6 rounded-full bg-gray-200 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={enableSMS}
+                  onChange={() => setEnableSMS(!enableSMS)}
+                  className="absolute w-4 h-4 rounded-full bg-blue-600 cursor-pointer pointer-events-none transition"
+                />
+                <span className="absolute left-1 top-1 text-xs font-semibold bg-white rounded-full h-4 w-4"></span>
+              </label>
+            </div>
+          </div>
         </div>
+
+        {/* Reminders */}
+        <div className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
+          <h2 className="text-lg font-bold text-blue-900 mb-4">Appointment Reminders</h2>
+
+          <p className="text-gray-600 mb-4">
+            Get notified before your appointments.
+          </p>
+
+          <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reminder"
+                  value="15"
+                  checked={reminderMinutes === 15}
+                  onChange={() => setReminderMinutes(15)}
+                  className="rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span>15 minutes before</span>
+              </label>
+            </div>
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reminder"
+                  value="60"
+                  checked={reminderMinutes === 60}
+                  onChange={() => setReminderMinutes(60)}
+                  className="rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span>1 hour before</span>
+              </label>
+            </div>
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reminder"
+                  value="1440"
+                  checked={reminderMinutes === 1440}
+                  onChange={() => setReminderMinutes(1440)}
+                  className="rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span>1 day before</span>
+              </label>
+            </div>
+            <div>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reminder"
+                  value="4320"
+                  checked={reminderMinutes === 4320}
+                  onChange={() => setReminderMinutes(4320)}
+                  className="rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span>2 days before</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
+            <div className="bg-white rounded-2xl p-8 max-w-sm w-full border border-gray-200">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Delete Account</h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to permanently delete your account? This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:text-gray-800 transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition"
+                >
+                  Delete Permanently
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </section>

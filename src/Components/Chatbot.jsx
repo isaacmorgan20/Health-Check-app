@@ -7,6 +7,8 @@ import useAuthStore from "../Context/authStore";
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
+let pendingTokenRefresh = null;
+
 const Chatbot = () => {
   const { isOpen, setIsOpen, toggleChat } = useChatStore();
   const setBookingDraft = useAgentStore((state) => state.setBookingDraft);
@@ -26,12 +28,18 @@ const Chatbot = () => {
   const messagesEndRef = useRef(null);
   const recognitionRef = useRef(null);
 
-  const suggestions = [
+const suggestions = [
     "Book an appointment",
     "What health packages do you offer?",
     "Explain homeopathic remedies",
     "What are your working hours?",
-  ];
+    "How do I prepare for a checkup?",
+    "What should I eat before a test?",
+    "Tell me about diabetes management",
+    "What are the symptoms of flu?",
+    "How much water should I drink daily?",
+    "Best foods for heart health",
+];
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
@@ -78,6 +86,9 @@ const Chatbot = () => {
       setInput("");
     }
 
+    const user = useAuthStore((state) => state.user);
+    const token = user?.getIdToken ? await user.getIdToken() : null;
+
     const userMessage = { role: "user", content: text };
     const newMessages = [...messages, userMessage];
     setMessages(newMessages);
@@ -86,11 +97,18 @@ const Chatbot = () => {
     try {
       // Map frontend messages format to API expected format:
       // {"messages": [{"role": "user", "content": "..."}, ...]}
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      // Include Firebase ID token for authentication if user is logged in
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+
       const response = await fetch(`${BACKEND_URL}/chat`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           messages: newMessages.map((msg) => ({
             role: msg.role,
@@ -173,7 +191,7 @@ const Chatbot = () => {
   };
 
   // Utility function to format simple markdown-like text (**bold** and \n linebreaks)
-  const formatMessage = (text) => {
+const formatMessage = (text) => {
     if (!text) return "";
     
     // Split by double newlines for paragraphs first
@@ -184,9 +202,13 @@ const Chatbot = () => {
         if (part.startsWith("**") && part.endsWith("**")) {
           return <strong key={partIdx} className="font-bold text-green-300">{part.slice(2, -2)}</strong>;
         }
+        // Replace *text* with italic
+        if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+          return <em key={partIdx} className="italic text-sm text-gray-300">{part.slice(1, -1)}</em>;
+        }
         return part;
       });
-
+  
       return (
         <p key={pIdx} className={pIdx > 0 ? "mt-2" : ""}>
           {formattedParts}

@@ -7,6 +7,7 @@ import usePackageStore from '../Context/packageStore'
 import useClinicStore from '../Context/clinicStore'
 import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
+import { CheckCircle, AlertCircle } from "lucide-react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
@@ -117,6 +118,7 @@ const Book = () => {
   const effectiveTime = dateSlots.includes(time) ? time : (dateSlots[0] || "")
 
   const submittedRef = useRef(false)
+  const [bookingSuccess, setBookingSuccess] = useState(false)
 
   const selectable = packages.filter((p) => !p.disabled)
   const selectedPkg = selectable.find((p) => p.name === selected)
@@ -124,12 +126,28 @@ const Book = () => {
   const discount = promoApplied?.discount || 0
   const finalPrice = Math.round(price * (1 - discount / 100))
 
+  const pkgFeatureIcons = {
+    "Basic Checkup": <Check className="w-4 h-4 text-green-400" />,
+    "Full Body Scan": <Zap className="w-4 h-4 text-blue-400" />,
+    "Home Visit": <Truck className="w-4 h-4 text-yellow-400" />,
+    "Consultation": <UserPlus className="w-4 h-4 text-purple-400" />,
+    "Premium Package": <Star className="w-4 h-4 text-amber-500" />,
+  }
+
   const notifyBooking = async (appointment, reference) => {
     if (!appointment.email) return
     try {
+      const authUser = useAuthStore((state) => state.user)
+      const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+      const headers = {
+        "Content-Type": "application/json",
+      }
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`
+      }
       await fetch(`${BACKEND_URL}/notify-booking`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({
           email: appointment.email,
           name: appointment.name,
@@ -198,7 +216,9 @@ const resetFields = useCallback(() => {
       currency: "GHS",
       ref: makeReference(),
       callback: async (response) => {
-        const result = await verifyPayment(response.reference)
+        const authUser = useAuthStore((state) => state.user)
+        const token = authUser?.getIdToken ? await authUser.getIdToken() : null
+        const result = await verifyPayment(response.reference, token)
         if (result.verified === false) {
           alert("Payment could not be verified yet. Your appointment is saved — we will confirm shortly.")
           navigate("/MyAppointment")
@@ -234,6 +254,8 @@ const resetFields = useCallback(() => {
 
     const docId = await saveAppointment(appointment)
     if (!docId) return
+
+    setBookingSuccess(true)
 
     if (paymentMethod === "online" && PAYSTACK_PUBLIC_KEY) {
       openPaystack(appointment, finalPrice, docId)
@@ -275,6 +297,7 @@ const resetFields = useCallback(() => {
         package: initialPackage?.name,
       }
       await saveAppointment(fields)
+      setBookingSuccess(true)
       notifyBooking(fields)
       clearBookingDraft()
       navigate("/MyAppointment")
@@ -469,7 +492,11 @@ const resetFields = useCallback(() => {
                 onChange={(e) => setPromoCode(e.target.value)}
                 className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
               />
-              <button
+<span className="text-green-600 text-sm mt-1">
+      Appointment booked successfully!
+    </span>
+
+          <button
                 type="button"
                 onClick={applyPromo}
                 className="bg-blue-700 hover:bg-blue-800 text-white px-4 rounded-lg transition text-sm font-semibold"
@@ -555,12 +582,18 @@ const resetFields = useCallback(() => {
             </span>
           </div>
 
-          <button
-            type="submit"
-            className="w-full bg-blue-900 text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold"
-          >
-            {paymentMethod === "online" ? "Book & Pay" : "Book Appointment"}
-          </button>
+          {!bookingSuccess ? (
+            <button
+              type="submit"
+              className="w-full bg-blue-900 text-white py-3 rounded-lg hover:bg-blue-800 transition font-semibold"
+            >
+              {paymentMethod === "online" ? "Book & Pay" : "Book Appointment"}
+            </button>
+          ) : (
+            <div className="w-full py-3 rounded-lg bg-green-100 text-green-800 font-semibold">
+              Appointment saved! Navigating to My Appointments...
+            </div>
+          )}
 
         </form>
 

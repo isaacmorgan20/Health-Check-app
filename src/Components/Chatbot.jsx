@@ -5,7 +5,7 @@ import useChatStore from "../Context/chatStore";
 import useAgentStore from "../Context/agentStore";
 import useAuthStore from "../Context/authStore";
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://backen-zj5x.onrender.com";
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://backen-2-k9uf.onrender.com";;
 
 const Chatbot = () => {
   const { isOpen, setIsOpen, toggleChat } = useChatStore();

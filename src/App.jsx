@@ -76,7 +76,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import BookAppointment from './Pages/BookAppointment'
 import Packages from "./Pages/Packages"
 import PackageDetails from "./Pages/PackageDetails"
-import MyAppointment from './MyAppointment'
+import MyAppointment from './Pages/MyAppointment'
 import Settings from './Pages/Settings'
 import Messages from './Pages/Messages'
 import Login from './Pages/Login'

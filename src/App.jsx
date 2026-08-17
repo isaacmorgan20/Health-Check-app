@@ -116,7 +116,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
 
         {/* Private Routes */}
-{user && (
+        {user && (
           <>
             <Route path="/" element={<Home />} />
             <Route path="/BookAppointment" element={<BookAppointment />} />
@@ -129,26 +129,27 @@ const App = () => {
             {admin && <Route path="/admin" element={<Admin />} />}
           </>
         )}
-        {user && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-400">Language: </span>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
-            >
-              <option value="en">English</option>
-              <option value="fr">Français</option>
-              <option value="tw">Twi</option>
-              <option value="gh">Ga</option>
-            </select>
-          </div>
-        )}
+
+        {/* Language selector outside Routes - valid for React Router */}
+        {user && <div className="flex items-center gap-2 mt-4">
+          <span className="text-sm text-gray-400">Language: </span>
+          <select
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+          >
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="tw">Twi</option>
+            <option value="gh">Ga</option>
+          </select>
+        </div>}
+
+        {/* Redirect logic */}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
-        {user && <Route path="*" element={<Navigate to="/" />} />}
+        {user && <Route path="*" element={<Navigate to="/" />} />
 
       </Routes>
-      {user && <Chatbot />}
     </BrowserRouter>
   )
 }

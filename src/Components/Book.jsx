@@ -9,7 +9,7 @@ import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
 import { Check, AlertCircle } from "lucide-react"
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://backen-2-k9uf.onrender.com"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://backen-1-j6ms.onrender.com"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
 
 const makeReference = () =>

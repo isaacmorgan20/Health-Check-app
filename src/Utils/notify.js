@@ -1,10 +1,16 @@
-const BACKEND = import.meta.env.VITE_BACKEND_URL || "https://backen-1-j6ms.onrender.com";
+const BACKEND = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000";
 
-export const verifyPayment = async (reference) => {
+export const verifyPayment = async (reference, token) => {
   try {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
     const res = await fetch(`${BACKEND}/verify-payment`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({ reference }),
     });
     return await res.json();
@@ -14,11 +20,17 @@ export const verifyPayment = async (reference) => {
   }
 };
 
-export const notifyClient = async (appointment, { subject, body }) => {
+export const notifyClient = async (appointment, { subject, body }, token) => {
   try {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
     await fetch(`${BACKEND}/notify-booking`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers,
       body: JSON.stringify({
         email: appointment.email,
         name: appointment.name,

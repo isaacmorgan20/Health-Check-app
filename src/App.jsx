@@ -88,15 +88,17 @@ import Register from './Pages/Register'
 import Home from './Pages/Home'
 import Chatbot from './Components/Chatbot'
 import Admin from './Components/Admin'
-
+import Profile from './Components/Profile'
 import useAuthStore from './Context/authStore'
 import isAdmin from './Utils/admin'
+import { useState } from 'react'
 
 const App = () => {
   const user = useAuthStore((state) => state.user)
   const loading = useAuthStore((state) => state.loading)
   const ListenToAuth = useAuthStore((state) => state.ListenToAuth)
   const admin = isAdmin(user?.email)
+  const [language, setLanguage] = useState('en')
 
   useEffect(() => {
     const unsubscribe = ListenToAuth()
@@ -114,7 +116,7 @@ const App = () => {
         <Route path="/register" element={<Register />} />
 
         {/* Private Routes */}
-        {user && (
+{user && (
           <>
             <Route path="/" element={<Home />} />
             <Route path="/BookAppointment" element={<BookAppointment />} />
@@ -123,11 +125,25 @@ const App = () => {
             <Route path="/MyAppointment" element={<MyAppointment />} />
             <Route path="/messages" element={<Messages />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
             {admin && <Route path="/admin" element={<Admin />} />}
           </>
         )}
-
-        {/* Redirect logic */}
+        {user && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-400">Language: </span>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+            >
+              <option value="en">English</option>
+              <option value="fr">Français</option>
+              <option value="tw">Twi</option>
+              <option value="gh">Ga</option>
+            </select>
+          </div>
+        )}
         {!user && <Route path="*" element={<Navigate to="/login" />} />}
         {user && <Route path="*" element={<Navigate to="/" />} />}
 

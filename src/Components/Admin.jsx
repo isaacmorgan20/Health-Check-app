@@ -78,6 +78,8 @@ const Admin = () => {
 
   const changeStatus = async (appointment, status) => {
     await updateUser(appointment.id, { status });
+    const authUser = useAuthStore((state) => state.user)
+    const token = authUser?.getIdToken ? await authUser.getIdToken() : null
     notifyClient(appointment, {
       subject: `Your appointment is ${status}`,
       body: `Hello ${appointment.name},\n\nYour appointment for ${
@@ -85,7 +87,7 @@ const Admin = () => {
       } on ${appointment.date || "your chosen date"} at ${
         appointment.time || "your chosen time"
       } has been updated to: ${status}.\n\nWe look forward to seeing you.\nHerbal Homeopathic Center`,
-    });
+    }, token);
   };
 
   const handleDelete = async (appointment) => {
@@ -111,10 +113,12 @@ const Admin = () => {
       ],
     });
     setAdminMessage("");
+    const authUser = useAuthStore((state) => state.user)
+    const token = authUser?.getIdToken ? await authUser.getIdToken() : null
     notifyClient(liveTarget, {
       subject: "New message from the clinic",
       body: `Hello ${liveTarget.name},\n\nYou have a new message from the clinic:\n\n"${text}"\n\nReply anytime on your Messages page.\nHerbal Homeopathic Center`,
-    });
+    }, token);
   };
 
   const conversations = appointments

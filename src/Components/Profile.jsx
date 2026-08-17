@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import useAuthStore from "../Context/authStore"
 import useUserStore from "../Context/UserStore"
-import { useToast } from "../Components/UIToast"
+import useToast from "../Components/UIToast"
 
 const Profile = () => {
   const navigate = useNavigate()

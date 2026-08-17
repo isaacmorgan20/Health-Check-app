@@ -76,6 +76,16 @@ const NavBar = () => {
 
           {user ? (
             <>
+              <select
+                className="bg-blue-900 border border-blue-700 rounded-lg px-2.5 py-1 text-xs text-gray-200 focus:outline-none focus:border-green-400"
+                defaultValue="en"
+              >
+                <option value="en">EN</option>
+                <option value="fr">FR</option>
+                <option value="tw">TW</option>
+                <option value="gh">GA</option>
+              </select>
+
               <div className="hidden sm:block bg-blue-800 px-3 py-1 rounded-lg text-xs">
                 <p className="text-gray-300">Welcome</p>
 

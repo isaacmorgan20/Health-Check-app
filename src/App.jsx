@@ -33,23 +33,6 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      {/* Language selector - outside Routes but inside BrowserRouter */}
-      {user && (
-        <div className="fixed top-4 right-4 z-50 flex items-center gap-2">
-          <span className="text-sm text-gray-400">Language: </span>
-          <select
-            value={language}
-            onChange={(e) => setLanguage(e.target.value)}
-            className="bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-1 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
-          >
-            <option value="en">English</option>
-            <option value="fr">Français</option>
-            <option value="tw">Twi</option>
-            <option value="gh">Ga</option>
-          </select>
-        </div>
-      )}
-
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />

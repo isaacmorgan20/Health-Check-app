@@ -9,7 +9,7 @@ import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
 import { Check, AlertCircle } from "lucide-react"
 
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "https://backen-zj5x.onrender.com"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""
 
 const makeReference = () =>

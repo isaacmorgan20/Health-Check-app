@@ -7,7 +7,7 @@ import usePackageStore from '../Context/packageStore'
 import useClinicStore from '../Context/clinicStore'
 import promos from '../Data/promos'
 import { verifyPayment } from '../Utils/notify'
-import { CheckCircle, AlertCircle } from "lucide-react"
+import { Check, Zap, Truck, UserPlus, Star, AlertCircle } from "lucide-react"
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://127.0.0.1:8000"
 const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || ""

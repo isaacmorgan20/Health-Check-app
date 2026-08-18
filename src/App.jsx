@@ -19,8 +19,9 @@ import isAdmin from './Utils/admin'
 const App = () => {
   const user = useAuthStore((state) => state.user)
   const loading = useAuthStore((state) => state.loading)
+  const profile = useAuthStore((state) => state.profile)
   const ListenToAuth = useAuthStore((state) => state.ListenToAuth)
-  const admin = isAdmin(user?.email)
+  const admin = isAdmin(profile)
 
   useEffect(() => {
     const unsubscribe = ListenToAuth()

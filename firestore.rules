@@ -10,26 +10,21 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isAdmin() {
+    function isClinicAdmin() {
       return isSignedIn()
-        && request.auth.token.email == 'morganisaackojo5547@gmail.com';
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == "clinic_admin";
     }
 
     function isOwnProfile() {
-      // Profile documents: doc id == uid, data has a matching 'uid' field
+      // Profile documents have 'uid' field matching the auth UID
       return isSignedIn()
         && resource.data.uid == request.auth.uid;
     }
 
     function isOwnAppointment() {
-      // Appointment documents: data has 'userUid' matching the caller
+      // Appointment documents have 'userUid' field matching the auth UID
       return isSignedIn()
         && resource.data.userUid == request.auth.uid;
-    }
-
-    function isOwnAppointmentCreate() {
-      return isSignedIn()
-        && request.resource.data.userUid == request.auth.uid;
     }
 
     function isOwnProfileCreate() {
@@ -37,43 +32,44 @@ service cloud.firestore {
         && request.resource.data.uid == request.auth.uid;
     }
 
+    function isOwnAppointmentCreate() {
+      return isSignedIn()
+        && request.resource.data.userUid == request.auth.uid;
+    }
+
     // ------------------------------------------------------------
     // users collection (holds BOTH profiles and appointments)
     // ------------------------------------------------------------
     match /users/{docId} {
 
-      allow read: if isAdmin()
-        || isOwnProfile()
-        || isOwnAppointment();
+      allow read: if isSignedIn()
+        && (isClinicAdmin() || isOwnProfile() || isOwnAppointment());
 
-      allow create: if isAdmin()
-        || isOwnProfileCreate()
-        || isOwnAppointmentCreate();
+      allow create: if isSignedIn()
+        && (isClinicAdmin() || isOwnProfileCreate() || isOwnAppointmentCreate());
 
-      allow update: if isAdmin()
-        || isOwnProfile()
-        || isOwnAppointment();
+      allow update: if isSignedIn()
+        && (isClinicAdmin() || isOwnProfile() || isOwnAppointment());
 
-      allow delete: if isAdmin()
-        || isOwnProfile()
-        || isOwnAppointment();
+      allow delete: if isSignedIn()
+        && (isClinicAdmin() || isOwnProfile() || isOwnAppointment());
     }
 
     // ------------------------------------------------------------
     // packages collection (any signed-in user can read;
-    // only admins can add/edit/disable)
+    // only clinic_admin can add/edit/disable)
     // ------------------------------------------------------------
     match /packages/{packageId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create, update, delete: if isClinicAdmin();
     }
 
     // ------------------------------------------------------------
-    // clinic collection (public info, editable only by admins)
+    // clinic collection (public info, editable only by clinic_admin)
     // ------------------------------------------------------------
     match /clinic/{docId} {
       allow read: if isSignedIn();
-      allow write: if isAdmin();
+      allow write: if isClinicAdmin();
     }
 
     // ------------------------------------------------------------

@@ -17,6 +17,7 @@ const useAuthStore = create((set) => ({
             name,
             email: user.email,
             createdAt: Date.now(),
+            role: "patient",
         };
 
         await setDoc(doc(db, "users", user.uid), profileData);
@@ -29,7 +30,8 @@ const useAuthStore = create((set) => ({
         const user = userCredential.user;
 
         const snap = await getDoc(doc(db, "users", user.uid));
-        const profileData = snap.exists() ? snap.data() : null;
+        const raw = snap.exists() ? snap.data() : null;
+        const profileData = raw ? { role: raw.role || "patient", clinicId: raw.clinicId || null, ...raw } : null;
 
         set({ user, profile: profileData });
     },
@@ -58,7 +60,8 @@ const useAuthStore = create((set) => ({
             }
             
             const snap = await getDoc(doc(db, "users", user.uid));
-            const profileData = snap.exists() ? snap.data() : null;
+            const raw = snap.exists() ? snap.data() : null;
+            const profileData = raw ? { role: raw.role || "patient", clinicId: raw.clinicId || null, ...raw } : null;
 
             set({ user, profile: profileData, loading: false });
         });

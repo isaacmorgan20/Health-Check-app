@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Credentials (keep out of git)
+*-firebase-adminsdk-*.json
+firebase-service-account.json
+FIREBASE_SERVICE_ACCOUNT*

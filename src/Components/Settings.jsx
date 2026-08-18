@@ -196,6 +196,22 @@ const SettingsContent = () => {
           </div>
         </div>
 
+        {/* Logout */}
+        <div className="bg-white shadow-lg rounded-2xl p-8 border border-gray-100">
+          <h2 className="text-lg font-bold text-blue-900 mb-4 flex items-center gap-2">
+            <LogOut className="w-5 h-5" /> Sign Out
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Sign out of your account. You'll need to log in again to access your appointments.
+          </p>
+          <button
+            onClick={Logout}
+            className="w-full bg-red-600 hover:bg-red-700 text-white py-3 rounded-lg font-semibold transition flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-4 h-4" /> Sign Out
+          </button>
+        </div>
+
         {/* Delete Confirmation Modal */}
         {showDeleteConfirm && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-xl z-50 flex items-center justify-center">
